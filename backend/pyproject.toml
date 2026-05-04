@@ -1,0 +1,27 @@
+[project]
+name = "edugrant-backend"
+version = "0.1.0"
+description = "Backend for EduGrant AI - Multi-agent scholarship automation"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "langgraph",
+    "langchain-openai",
+    "sqlalchemy[asyncio]",
+    "alembic",
+    "asyncpg",
+    "pydantic-settings",
+    "python-multipart",
+    "boto3",
+    "jinja2",
+    "python-jose[cryptography]",
+    "passlib[bcrypt]",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+    "promptfoo",
+]
