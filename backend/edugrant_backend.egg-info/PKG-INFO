@@ -1,0 +1,17 @@
+Metadata-Version: 2.4
+Name: edugrant-backend
+Version: 0.1.0
+Summary: Backend for EduGrant AI - Multi-agent scholarship automation
+Requires-Dist: fastapi
+Requires-Dist: uvicorn
+Requires-Dist: langgraph
+Requires-Dist: langchain-openai
+Requires-Dist: sqlalchemy[asyncio]
+Requires-Dist: alembic
+Requires-Dist: asyncpg
+Requires-Dist: pydantic-settings
+Requires-Dist: python-multipart
+Requires-Dist: boto3
+Requires-Dist: jinja2
+Requires-Dist: python-jose[cryptography]
+Requires-Dist: passlib[bcrypt]

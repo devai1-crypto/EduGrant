@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
@@ -9,7 +7,7 @@
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  background-color: #FAFAF7;
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -25,4 +23,9 @@ body {
   min-height: 100vh;
   background-color: #FAFAF7;
   color: #1a1a1a;
+}
+
+@theme {
+  --color-riselogic-blue: #0066FF;
+  --color-riselogic-offwhite: #FAFAF7;
 }
