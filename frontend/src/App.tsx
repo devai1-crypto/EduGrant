@@ -104,14 +104,14 @@ const StudentPortal = () => {
   };
 
   const handleFinalSubmit = () => {
-    if (step !== 4) return;
+    if (step !== 5) return;
     setIsSubmitting(true);
     setTimeout(() => navigate('/status/run_829411'), 2500);
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (step < 4) {
+    if (step < 5) {
       setStep(step + 1);
     } else {
       handleFinalSubmit();
@@ -128,7 +128,7 @@ const StudentPortal = () => {
               <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" /> Back to Home
             </Link>
             <div className="flex gap-2">
-              {[1, 2, 3, 4].map(s => (
+              {[1, 2, 3, 4, 5].map(s => (
                 <div key={s} className={`w-8 h-1 rounded-full transition-all duration-500 ${step >= s ? 'bg-navy' : 'bg-gray-200'}`} />
               ))}
             </div>
@@ -270,6 +270,55 @@ const StudentPortal = () => {
                     </div>
                   </motion.div>
                 )}
+
+                {step === 5 && (
+                  <motion.div key="step5" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12">
+                    <header>
+                      <div className="flex items-center gap-3 text-electric mb-3">
+                         <Sparkles className="w-5 h-5" />
+                         <span className="text-[9px] font-black uppercase tracking-[0.4em]">Section 05</span>
+                      </div>
+                      <h2 className="text-serif text-5xl text-navy">Review</h2>
+                    </header>
+
+                    <div className="space-y-6">
+                       {[
+                         { id: 1, label: 'Identity', data: [ { l: 'Name', v: formData.fullName }, { l: 'Email', v: formData.email } ] },
+                         { id: 2, label: 'Academic', data: [ { l: 'Institution', v: formData.institution }, { l: 'GPA', v: formData.gpa } ] },
+                         { id: 3, label: 'Financial', data: [ { l: 'Annual Income', v: `$${formData.income}` } ] }
+                       ].map(section => (
+                         <div key={section.id} className="p-8 bg-alabaster rounded-3xl border border-gray-100 group relative hover:border-navy transition-all">
+                            <button type="button" onClick={() => setStep(section.id)} className="absolute top-6 right-6 flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-gray-400 hover:text-navy transition-colors">
+                              <RotateCcw className="w-3 h-3" /> Edit Section
+                            </button>
+                            <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6">{section.label}</h3>
+                            <div className="grid grid-cols-2 gap-8">
+                               {section.data.map((d, i) => (
+                                 <div key={i}>
+                                    <span className="block text-[8px] font-black uppercase text-gray-400 mb-1">{d.l}</span>
+                                    <span className="text-sm font-medium text-navy">{d.v || 'Not provided'}</span>
+                                 </div>
+                               ))}
+                            </div>
+                         </div>
+                       ))}
+
+                       <div className="p-8 bg-alabaster rounded-3xl border border-gray-100 group relative hover:border-navy transition-all">
+                          <button type="button" onClick={() => setStep(4)} className="absolute top-6 right-6 flex items-center gap-2 text-[8px] font-black uppercase tracking-widest text-gray-400 hover:text-navy transition-colors">
+                            <RotateCcw className="w-3 h-3" /> Edit Section
+                          </button>
+                          <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-6">Documents</h3>
+                          <div className="flex flex-wrap gap-2">
+                             {Object.entries(files).map(([id, file]) => (
+                               file && <div key={id} className="px-4 py-2 bg-white rounded-xl border border-gray-100 text-[9px] font-black uppercase tracking-widest text-navy flex items-center gap-2">
+                                 <CheckCircle2 className="w-3 h-3 text-green-500" /> {id}
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+                    </div>
+                  </motion.div>
+                )}
               </AnimatePresence>
 
               <div className="pt-12 flex items-center justify-between border-t border-gray-50">
@@ -284,14 +333,14 @@ const StudentPortal = () => {
                        <ChevronLeft className="w-3.5 h-3.5" /> Previous
                      </button>
                    )}
-                    {step < 4 ? (
+                    {step < 5 ? (
                     <button 
                       key="next-button"
                       type="button" 
                       onClick={() => setStep(step + 1)} 
                       className="px-10 py-3 bg-[#D4A373] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-[#D4A373]/20 cursor-pointer flex items-center gap-3"
                     >
-                      Next Section <ArrowRight className="w-3.5 h-3.5" />
+                      {step === 4 ? 'Review Application' : 'Next Section'} <ArrowRight className="w-3.5 h-3.5" />
                     </button>
                    ) : (
                     <button 
