@@ -6,7 +6,7 @@ import {
   Upload, Star, Activity, ChevronLeft, ChevronRight, Sparkles,
   Calendar, RotateCcw, Plus, FileText, User, X,
   LayoutDashboard, Search, Filter, ArrowUpRight, ShieldCheck, Clock,
-  Banknote, BookOpen
+  Banknote, BookOpen, Fingerprint, Award, Wallet, Loader2
 } from 'lucide-react';
 
 // --- Shared Layout Wrapper ---
@@ -15,7 +15,7 @@ const PageWrapper = ({ children, bg = "bg-[#F8F9FA]" }: { children: React.ReactN
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
     exit={{ opacity: 0 }}
-    transition={{ duration: 0.4 }}
+    transition={{ duration: 0.5 }}
     className={`w-full min-h-screen ${bg}`}
   >
     {children}
@@ -85,7 +85,7 @@ const LandingPage = () => (
   </PageWrapper>
 );
 
-// --- Student Portal ---
+// --- Student Portal (Full Premium Concierge Flow) ---
 const StudentPortal = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -103,155 +103,170 @@ const StudentPortal = () => {
     setFiles(prev => ({ ...prev, [type]: file }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleFinalSubmit = () => {
+    if (step !== 4) return;
     setIsSubmitting(true);
     setTimeout(() => navigate('/status/run_829411'), 2500);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (step < 4) {
+      setStep(step + 1);
+    } else {
+      handleFinalSubmit();
+    }
   };
 
   return (
     <PageWrapper>
       <div className="pt-12 pb-20 px-8">
         <div className="max-w-3xl mx-auto">
+          
           <div className="mb-12 flex items-center justify-between">
-            <Link to="/" className="flex items-center gap-2 text-gray-400 font-black hover:text-navy transition-colors text-[10px] uppercase tracking-[0.3em] cursor-pointer">
-              <ChevronLeft className="w-3.5 h-3.5" /> Back to Home
+            <Link to="/" className="flex items-center gap-2 text-gray-400 font-black hover:text-navy transition-colors text-[10px] uppercase tracking-[0.3em] cursor-pointer group">
+              <ChevronLeft className="w-3.5 h-3.5 group-hover:-translate-x-1 transition-transform" /> Back to Home
             </Link>
             <div className="flex gap-2">
-              {[1, 2, 3, 4].map(s => <div key={s} className={`w-8 h-1 rounded-full transition-all duration-500 ${step >= s ? 'bg-navy' : 'bg-gray-200'}`} />)}
+              {[1, 2, 3, 4].map(s => (
+                <div key={s} className={`w-8 h-1 rounded-full transition-all duration-500 ${step >= s ? 'bg-navy' : 'bg-gray-200'}`} />
+              ))}
             </div>
           </div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.04)] border border-gray-100 p-12 md:p-16">
-            <form onSubmit={handleSubmit} className="space-y-10">
-              <header className="mb-12">
-                <h2 className="text-serif text-4xl text-navy mb-2">Create Application</h2>
-                <p className="text-gray-400 text-xs font-black uppercase tracking-[0.2em]">Institutional Scholarship v1.0</p>
-              </header>
-
+          <motion.div 
+            layout
+            className="bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.04)] border border-gray-100 p-12 md:p-16 relative overflow-hidden"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#F8F9FA] rounded-bl-[5rem]" />
+            <form onSubmit={handleSubmit} className="relative z-10 space-y-10">
+              
               <AnimatePresence mode="wait">
                 {step === 1 && (
-                  <motion.div key="1" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-                    <div>
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2.5 block">Full Name</label>
-                      <input 
-                        type="text" 
-                        className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" 
-                        placeholder="Alexander Hamilton" 
-                        value={formData.fullName}
-                        onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-8">
-                      <div>
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2.5 block">Email</label>
-                        <input 
-                          type="email" 
-                          className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" 
-                          placeholder="name@edu.com" 
-                          value={formData.email}
-                          onChange={(e) => setFormData({...formData, email: e.target.value})}
-                        />
+                  <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12">
+                    <header>
+                      <div className="flex items-center gap-3 text-electric mb-3">
+                         <Fingerprint className="w-5 h-5" />
+                         <span className="text-[9px] font-black uppercase tracking-[0.4em]">Section 01</span>
                       </div>
+                      <h2 className="text-serif text-5xl text-navy">Identity</h2>
+                    </header>
+
+                    <div className="space-y-8">
                       <div>
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2.5 block">DOB</label>
-                        <input 
-                          type="date" 
-                          className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none cursor-pointer" 
-                          value={formData.dob}
-                          onChange={(e) => setFormData({...formData, dob: e.target.value})}
-                        />
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Legal Full Name</label>
+                        <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none transition-all" placeholder="Alexander Hamilton" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-8">
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Email Address</label>
+                          <input type="email" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" placeholder="name@edu.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Date of Birth</label>
+                          <div className="relative">
+                            <input type="date" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none cursor-pointer" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} />
+                            <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 )}
 
                 {step === 2 && (
-                  <motion.div key="2" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-                    <div>
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2.5 block">Institution</label>
-                      <input 
-                        type="text" 
-                        className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" 
-                        placeholder="Ex: Stanford University" 
-                        value={formData.institution}
-                        onChange={(e) => setFormData({...formData, institution: e.target.value})}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-8">
-                      <div>
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2.5 block">Cumulative GPA (4.0 Scale)</label>
-                        <input 
-                          type="number" step="0.01"
-                          className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" 
-                          placeholder="4.00" 
-                          value={formData.gpa}
-                          onChange={(e) => setFormData({...formData, gpa: e.target.value})}
-                        />
+                  <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12">
+                    <header>
+                      <div className="flex items-center gap-3 text-electric mb-3">
+                         <Award className="w-5 h-5" />
+                         <span className="text-[9px] font-black uppercase tracking-[0.4em]">Section 02</span>
                       </div>
+                      <h2 className="text-serif text-5xl text-navy">Academic</h2>
+                    </header>
+
+                    <div className="space-y-8">
                       <div>
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2.5 block">Total Credits Completed</label>
-                        <input 
-                          type="number" 
-                          className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" 
-                          placeholder="60" 
-                          value={formData.credits}
-                          onChange={(e) => setFormData({...formData, credits: e.target.value})}
-                        />
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Institution</label>
+                        <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" placeholder="Stanford University" value={formData.institution} onChange={e => setFormData({...formData, institution: e.target.value})} />
+                      </div>
+                      <div className="grid grid-cols-2 gap-8">
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Cumulative GPA</label>
+                          <input type="number" step="0.01" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" placeholder="4.00" value={formData.gpa} onChange={e => setFormData({...formData, gpa: e.target.value})} />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Credits Completed</label>
+                          <input type="number" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" placeholder="60" value={formData.credits} onChange={e => setFormData({...formData, credits: e.target.value})} />
+                        </div>
                       </div>
                     </div>
                   </motion.div>
                 )}
 
                 {step === 3 && (
-                  <motion.div key="3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-8">
-                    <div>
-                      <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2.5 block">Annual Household Income (USD)</label>
-                      <div className="relative">
-                        <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
-                        <input 
-                          type="number" 
-                          className="w-full bg-white border border-gray-200 rounded-xl pl-12 pr-5 py-3.5 text-sm font-medium focus:border-navy outline-none" 
-                          placeholder="0.00" 
-                          value={formData.income}
-                          onChange={(e) => setFormData({...formData, income: e.target.value})}
-                        />
+                  <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12">
+                    <header>
+                      <div className="flex items-center gap-3 text-electric mb-3">
+                         <Wallet className="w-5 h-5" />
+                         <span className="text-[9px] font-black uppercase tracking-[0.4em]">Section 03</span>
                       </div>
-                      <p className="mt-4 text-[9px] font-black text-gray-400 uppercase tracking-widest leading-relaxed">This data is encrypted and used solely for need-based scoring.</p>
+                      <h2 className="text-serif text-5xl text-navy">Financial</h2>
+                    </header>
+
+                    <div className="space-y-8">
+                      <div>
+                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Annual Household Income (USD)</label>
+                        <div className="relative">
+                          <Banknote className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300" />
+                          <input type="number" className="w-full bg-white border border-gray-200 rounded-xl pl-12 pr-5 py-3.5 text-sm font-medium focus:border-navy outline-none" placeholder="0.00" value={formData.income} onChange={e => setFormData({...formData, income: e.target.value})} />
+                        </div>
+                      </div>
+                      <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
+                         <ShieldCheck className="text-blue-500 w-5 h-5 flex-shrink-0" />
+                         <p className="text-[10px] text-blue-600 font-medium leading-relaxed uppercase tracking-widest">Data Encrypted: Used solely for equity-based scoring.</p>
+                      </div>
                     </div>
                   </motion.div>
                 )}
 
                 {step === 4 && (
-                  <motion.div key="4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-8">
-                    <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-2.5 block">Vault Documents</label>
-                    <div className="p-10 border-2 border-dashed border-gray-100 rounded-[2rem] bg-[#FAFAFA] text-center group hover:border-navy transition-all cursor-pointer relative">
-                      <Upload className="w-10 h-10 text-gray-300 mb-4 mx-auto group-hover:text-navy transition-colors" />
-                      <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-navy transition-colors block">Upload Official Transcript (PDF)</span>
-                      <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange('transcript', e.target.files?.[0] || null)} />
-                      {files.transcript && <div className="mt-4 text-green-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" /> {files.transcript.name}</div>}
-                    </div>
-                    
-                    <div className="grid grid-cols-1 gap-4">
-                       {[
-                         { id: 'id', label: 'Identity Proof', icon: User },
-                         { id: 'income', label: 'Income Verification', icon: Banknote },
-                         { id: 'essay', label: 'Personal Essay', icon: Plus }
-                       ].map(doc => (
-                        <div key={doc.id} className="relative flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl hover:border-navy transition-all shadow-sm group cursor-pointer overflow-hidden">
-                           <div className="flex items-center gap-4">
-                             <div className="w-10 h-10 bg-alabaster rounded-xl flex items-center justify-center text-gray-300 group-hover:text-navy transition-colors">
-                               <doc.icon className="w-5 h-5" />
+                  <motion.div key="step4" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-12">
+                    <header>
+                      <div className="flex items-center gap-3 text-electric mb-3">
+                         <Zap className="w-5 h-5" />
+                         <span className="text-[9px] font-black uppercase tracking-[0.4em]">Section 04</span>
+                      </div>
+                      <h2 className="text-serif text-5xl text-navy">The Vault</h2>
+                    </header>
+
+                    <div className="space-y-6">
+                       <div className="p-10 border-2 border-dashed border-gray-100 rounded-[2rem] bg-[#FAFAFA] text-center group hover:border-navy transition-all cursor-pointer relative">
+                        <Upload className="w-10 h-10 text-gray-300 mb-4 mx-auto group-hover:text-navy transition-colors" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-navy block">Click to upload official transcript</span>
+                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileChange('transcript', e.target.files?.[0] || null)} />
+                        {files.transcript && <div className="mt-4 text-green-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" /> {files.transcript.name}</div>}
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-4">
+                         {[
+                           { id: 'id', label: 'Identity Proof', icon: User },
+                           { id: 'income', label: 'Income Verification', icon: Banknote },
+                           { id: 'essay', label: 'Personal Essay', icon: Plus }
+                         ].map(doc => (
+                          <div key={doc.id} className="relative flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl hover:border-navy transition-all shadow-sm group cursor-pointer overflow-hidden">
+                             <div className="flex items-center gap-4">
+                               <div className="w-10 h-10 bg-alabaster rounded-xl flex items-center justify-center text-gray-300 group-hover:text-navy transition-colors">
+                                 <doc.icon className="w-5 h-5" />
+                               </div>
+                               <div>
+                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-navy">{doc.label}</h4>
+                               </div>
                              </div>
-                             <div>
-                               <h4 className="text-[10px] font-black uppercase tracking-widest text-navy">{doc.label}</h4>
-                               <p className="text-[9px] text-gray-300 font-bold uppercase tracking-widest">PDF Preferred</p>
-                             </div>
-                           </div>
-                           <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={(e) => handleFileChange(doc.id, e.target.files?.[0] || null)} />
-                           {files[doc.id] && <CheckCircle2 className="text-green-500 w-4 h-4" />}
-                        </div>
-                       ))}
+                             <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileChange(doc.id, e.target.files?.[0] || null)} />
+                             {files[doc.id] && <CheckCircle2 className="text-green-500 w-4 h-4" />}
+                          </div>
+                         ))}
+                      </div>
                     </div>
                   </motion.div>
                 )}
@@ -259,16 +274,34 @@ const StudentPortal = () => {
 
               <div className="pt-12 flex items-center justify-between border-t border-gray-50">
                 <div className="flex gap-3">
-                  <button type="button" className="px-6 py-3 bg-[#F1F3F5] text-navy rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-200 transition-all cursor-pointer">Draft</button>
-                  <button type="button" className="px-6 py-3 bg-[#E9ECEF] text-navy rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-gray-200 transition-all cursor-pointer">Restore</button>
+                  <button type="button" className="px-6 py-3 bg-[#F1F3F5] text-navy rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">Draft</button>
+                  <button type="button" className="px-6 py-3 bg-[#E9ECEF] text-navy rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer">Restore</button>
                 </div>
-                <div className="flex gap-3 items-center">
-                   <button type="button" onClick={() => setStep(1)} className="px-6 py-3 text-gray-400 text-[10px] font-black uppercase tracking-widest hover:text-navy transition-colors cursor-pointer">Reset</button>
-                   {step < 4 ? (
-                    <button type="button" onClick={() => setStep(step + 1)} className="px-10 py-3 bg-[#D4A373] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-[#D4A373]/20 cursor-pointer flex items-center gap-2">Next Section <ArrowRight className="w-3.5 h-3.5" /></button>
+                
+                <div className="flex gap-4 items-center">
+                   {step > 1 && (
+                     <button type="button" onClick={() => setStep(step - 1)} className="px-6 py-3 bg-[#F1F3F5] text-navy rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all cursor-pointer flex items-center gap-2">
+                       <ChevronLeft className="w-3.5 h-3.5" /> Previous
+                     </button>
+                   )}
+                    {step < 4 ? (
+                    <button 
+                      key="next-button"
+                      type="button" 
+                      onClick={() => setStep(step + 1)} 
+                      className="px-10 py-3 bg-[#D4A373] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-[#D4A373]/20 cursor-pointer flex items-center gap-3"
+                    >
+                      Next Section <ArrowRight className="w-3.5 h-3.5" />
+                    </button>
                    ) : (
-                    <button type="submit" disabled={isSubmitting} className="px-10 py-3 bg-navy text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl cursor-pointer">
-                      {isSubmitting ? "Processing..." : "Create Application"}
+                    <button 
+                      key="submit-button"
+                      type="button" 
+                      onClick={handleFinalSubmit}
+                      disabled={isSubmitting} 
+                      className="px-10 py-3 bg-navy text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl cursor-pointer flex items-center gap-3"
+                    >
+                      {isSubmitting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><Sparkles className="w-3.5 h-3.5 text-electric" /> Create Application</>}
                     </button>
                    )}
                 </div>
@@ -281,12 +314,13 @@ const StudentPortal = () => {
   );
 };
 
-// --- Status Page ---
+// --- Cinematic Status Page ---
 const StatusPage = () => {
   const [progress, setProgress] = useState(1);
   useEffect(() => {
-    const timer = setTimeout(() => setProgress(2), 3000);
-    return () => clearTimeout(timer);
+    const t1 = setTimeout(() => setProgress(2), 3000);
+    const t2 = setTimeout(() => setProgress(3), 7000);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
   }, []);
 
   return (
@@ -298,12 +332,10 @@ const StatusPage = () => {
           <div className="w-20 h-20 bg-white/5 backdrop-blur-2xl rounded-[2rem] flex items-center justify-center mb-12 mx-auto border border-white/10 shadow-2xl">
             <Zap className="text-electric w-8 h-8 fill-current" />
           </div>
-          
           <h1 className="text-serif text-6xl text-white mb-6">Evaluating <br /><span className="italic font-light text-electric">Intelligence.</span></h1>
-          
           <div className="mt-16 flex items-center justify-between max-w-2xl mx-auto relative px-4">
              <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/10 -translate-y-1/2" />
-             <div className="absolute top-1/2 left-0 h-[1px] bg-electric -translate-y-1/2 transition-all duration-1000" style={{ width: progress === 1 ? '33%' : progress === 2 ? '66%' : '100%' }} />
+             <div className="absolute top-1/2 left-0 h-[1px] bg-electric -translate-y-1/2 transition-all duration-1000" style={{ width: progress === 1 ? '0%' : progress === 2 ? '50%' : '100%' }} />
              {[
                { id: 1, label: 'Received' },
                { id: 2, label: 'AI Review' },
@@ -317,7 +349,6 @@ const StatusPage = () => {
                </div>
              ))}
           </div>
-
           <div className="mt-24 flex items-center justify-center gap-8">
             <Link to="/" className="text-[10px] font-black text-gray-500 hover:text-white transition-colors uppercase tracking-[0.4em] cursor-pointer">Exit Session</Link>
             <div className="w-1 h-1 bg-gray-800 rounded-full" />
@@ -354,16 +385,11 @@ const TraceUI = () => {
             </div>
             <Link to="/admin" className="text-[10px] font-black text-white/50 hover:text-white uppercase tracking-widest border border-white/10 px-6 py-2.5 rounded-full cursor-pointer">Close Trace</Link>
           </header>
-
           <div className="flex-1 bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 relative overflow-hidden flex items-center justify-center p-20">
              <div className="relative flex items-center gap-32">
                 {nodes.map((node, i) => (
                   <div key={node.id} className="relative flex flex-col items-center gap-6">
-                    <motion.div 
-                      animate={node.status === 'ACTIVE' ? { scale: [1, 1.05, 1], borderColor: ['rgba(0,102,255,0.2)', 'rgba(0,102,255,1)', 'rgba(0,102,255,0.2)'] } : {}}
-                      transition={{ duration: 2, repeat: Infinity }}
-                      className={`w-40 h-40 rounded-[2.5rem] border-2 flex flex-col items-center justify-center gap-4 transition-all duration-700 ${node.status === 'OK' ? 'border-green-500 bg-green-500/5' : node.status === 'ACTIVE' ? 'border-electric bg-electric/10' : 'border-white/10 bg-white/5'}`}
-                    >
+                    <motion.div animate={node.status === 'ACTIVE' ? { scale: [1, 1.05, 1], borderColor: ['rgba(0,102,255,0.2)', 'rgba(0,102,255,1)', 'rgba(0,102,255,0.2)'] } : {}} transition={{ duration: 2, repeat: Infinity }} className={`w-40 h-40 rounded-[2.5rem] border-2 flex flex-col items-center justify-center gap-4 transition-all duration-700 ${node.status === 'OK' ? 'border-green-500 bg-green-500/5' : node.status === 'ACTIVE' ? 'border-electric bg-electric/10' : 'border-white/10 bg-white/5'}`}>
                       {node.status === 'OK' ? <ShieldCheck className="text-green-500 w-8 h-8" /> : node.status === 'ACTIVE' ? <Zap className="text-electric w-8 h-8 animate-pulse" /> : <Clock className="text-white/20 w-8 h-8" />}
                       <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white text-center px-4">{node.label}</span>
                     </motion.div>
@@ -387,40 +413,12 @@ const AdminDashboard = () => (
               <h1 className="text-serif text-4xl text-navy">Application Queue</h1>
               <p className="text-xs font-black text-gray-400 uppercase tracking-widest mt-1">Manage institutional funding requests</p>
            </div>
-           <div className="flex gap-4">
-              <button className="bg-white border border-gray-100 p-2.5 rounded-xl text-navy hover:bg-gray-50 transition-all cursor-pointer"><Filter className="w-5 h-5" /></button>
-           </div>
+           <button className="bg-white border border-gray-100 p-2.5 rounded-xl text-navy hover:bg-gray-50 transition-all cursor-pointer"><Filter className="w-5 h-5" /></button>
         </header>
-
         <div className="bg-white rounded-[2.5rem] border border-gray-100 shadow-sm overflow-hidden">
            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-gray-50">
-                  {['Student', 'GPA', 'AI Score', 'Recommendation', 'Action'].map(h => (
-                    <th key={h} className="px-8 py-6 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { name: 'John Doe', gpa: '3.94', score: 92, status: 'Auto-Approve' },
-                  { name: 'Jane Smith', gpa: '3.88', score: 88, status: 'Review' }
-                ].map((row, i) => (
-                  <tr key={i} className="group border-b border-gray-50 hover:bg-gray-50/50 transition-all">
-                    <td className="px-8 py-6"><p className="font-black text-navy text-sm">{row.name}</p></td>
-                    <td className="px-8 py-6 text-sm font-medium text-gray-600">{row.gpa}</td>
-                    <td className="px-8 py-6"><span className="text-electric font-black text-sm">{row.score}</span></td>
-                    <td className="px-8 py-6">
-                       <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${row.status === 'Auto-Approve' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>{row.status}</span>
-                    </td>
-                    <td className="px-8 py-6">
-                       <Link to="/trace/run_829411" className="p-2.5 bg-gray-50 rounded-lg text-navy hover:bg-navy hover:text-white transition-all inline-flex items-center gap-2 cursor-pointer">
-                         <Activity className="w-3.5 h-3.5" />
-                       </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
+              <thead><tr className="border-b border-gray-50">{['Student', 'GPA', 'AI Score', 'Recommendation', 'Action'].map(h => (<th key={h} className="px-8 py-6 text-[9px] font-black text-gray-400 uppercase tracking-[0.2em]">{h}</th>))}</tr></thead>
+              <tbody>{[ { name: 'John Doe', gpa: '3.94', score: 92, status: 'Auto-Approve' }, { name: 'Jane Smith', gpa: '3.88', score: 88, status: 'Review' } ].map((row, i) => (<tr key={i} className="group border-b border-gray-50 hover:bg-gray-50/50 transition-all"><td className="px-8 py-6 font-black text-navy text-sm">{row.name}</td><td className="px-8 py-6 text-sm font-medium text-gray-600">{row.gpa}</td><td className="px-8 py-6 text-electric font-black text-sm">{row.score}</td><td className="px-8 py-6"><span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${row.status === 'Auto-Approve' ? 'bg-green-50 text-green-600' : 'bg-orange-50 text-orange-600'}`}>{row.status}</span></td><td className="px-8 py-6"><Link to="/trace/run_829411" className="p-2.5 bg-gray-50 rounded-lg text-navy hover:bg-navy hover:text-white transition-all cursor-pointer inline-flex"><Activity className="w-3.5 h-3.5" /></Link></td></tr>))}</tbody>
            </table>
         </div>
       </div>
@@ -431,7 +429,7 @@ const AdminDashboard = () => (
 function App() {
   const location = useLocation();
   return (
-    <div className="w-full h-full font-sans overflow-x-hidden">
+    <div className="w-full min-h-screen font-sans overflow-x-hidden bg-[#FAFAF9]">
       <Navbar />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location?.pathname || 'default'}>
