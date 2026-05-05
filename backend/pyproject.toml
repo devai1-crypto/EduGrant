@@ -19,6 +19,7 @@ dependencies = [
     "email-validator",
     "langgraph-checkpoint-postgres",
     "psycopg-binary",
+    "resend",
 ]
 
 [tool.uv]

@@ -19,7 +19,7 @@ class Settings(BaseSettings):
     R2_SECRET_ACCESS_KEY: str = ""
     
     # Email Settings (Resend)
-    RESEND_API_KEY: str = ""
+    RESEND_API_KEY: str = "re_Xqy93fpk_MUWo8fmuk26vX1Pswi94k2ic"
     EMAIL_SENDER: str = "onboarding@resend.dev"
     
     # Security Settings
