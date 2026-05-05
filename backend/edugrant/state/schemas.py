@@ -44,3 +44,29 @@ class ApplicationPayload(BaseModel):
     scholarship_type: str
     form_data: dict
     attachments: List[str]  # List of S3 keys
+
+class ApplicationResponse(BaseModel):
+    application_id: str
+    run_id: str
+
+class ApplicationStatusResponse(BaseModel):
+    status: str
+    current_node: Optional[str] = None
+    last_event_at: Optional[datetime] = None
+    missing_fields: List[str] = []
+
+class AgentEventResponse(BaseModel):
+    node_name: str
+    event_type: str
+    input_summary: Optional[dict] = None
+    output_summary: Optional[dict] = None
+    latency_ms: Optional[int] = None
+    created_at: datetime
+
+class AdminApplicationSummary(BaseModel):
+    application_id: str
+    student_name: str
+    gpa: float
+    eligibility_score: Optional[int] = None
+    recommendation: Optional[str] = None
+    status: str
