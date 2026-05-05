@@ -153,11 +153,11 @@ const StudentPortal = () => {
                     </header>
 
                     <div className="space-y-8">
-                      <div>
-                        <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Legal Full Name</label>
-                        <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none transition-all" placeholder="Alexander Hamilton" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
-                      </div>
                       <div className="grid grid-cols-2 gap-8">
+                        <div className="col-span-2">
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Legal Full Name</label>
+                          <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none transition-all" placeholder="Alexander Hamilton" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} />
+                        </div>
                         <div>
                           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Email Address</label>
                           <input type="email" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" placeholder="name@edu.com" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} />
@@ -168,6 +168,14 @@ const StudentPortal = () => {
                             <input type="date" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none cursor-pointer" value={formData.dob} onChange={e => setFormData({...formData, dob: e.target.value})} />
                             <Calendar className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-300 pointer-events-none" />
                           </div>
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Nationality</label>
+                          <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" placeholder="United States" value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Student ID (Optional)</label>
+                          <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-navy outline-none" placeholder="SID-88291" value={formData.studentId} onChange={e => setFormData({...formData, studentId: e.target.value})} />
                         </div>
                       </div>
                     </div>
@@ -251,6 +259,7 @@ const StudentPortal = () => {
                          {[
                            { id: 'id', label: 'Identity Proof', icon: User },
                            { id: 'income', label: 'Income Verification', icon: Banknote },
+                           { id: 'recommendation', label: 'Recommendation Letter', icon: FileText },
                            { id: 'essay', label: 'Personal Essay', icon: Plus }
                          ].map(doc => (
                           <div key={doc.id} className="relative flex items-center justify-between p-5 bg-white border border-gray-100 rounded-2xl hover:border-navy transition-all shadow-sm group cursor-pointer overflow-hidden">
@@ -283,7 +292,7 @@ const StudentPortal = () => {
 
                     <div className="space-y-6">
                        {[
-                         { id: 1, label: 'Identity', data: [ { l: 'Name', v: formData.fullName }, { l: 'Email', v: formData.email } ] },
+                         { id: 1, label: 'Identity', data: [ { l: 'Name', v: formData.fullName }, { l: 'Email', v: formData.email }, { l: 'Nationality', v: formData.nationality }, { l: 'Student ID', v: formData.studentId } ] },
                          { id: 2, label: 'Academic', data: [ { l: 'Institution', v: formData.institution }, { l: 'GPA', v: formData.gpa } ] },
                          { id: 3, label: 'Financial', data: [ { l: 'Annual Income', v: `$${formData.income}` } ] }
                        ].map(section => (
@@ -387,8 +396,9 @@ const StatusPage = () => {
              <div className="absolute top-1/2 left-0 h-[1px] bg-electric -translate-y-1/2 transition-all duration-1000" style={{ width: progress === 1 ? '0%' : progress === 2 ? '50%' : '100%' }} />
              {[
                { id: 1, label: 'Received' },
-               { id: 2, label: 'AI Review' },
-               { id: 3, label: 'Decision' }
+               { id: 2, label: 'Reviewing' },
+               { id: 3, label: 'Action Needed' },
+               { id: 4, label: 'Decided' }
              ].map((s) => (
                <div key={s.id} className="relative z-10 flex flex-col items-center gap-4">
                   <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-700 ${progress >= s.id ? 'bg-electric border-electric text-white' : 'bg-navy border-white/20 text-white/20'}`}>
