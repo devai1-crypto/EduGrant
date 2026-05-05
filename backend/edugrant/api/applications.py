@@ -68,7 +68,7 @@ async def submit_application(payload: ApplicationPayload, background_tasks: Back
     
     return {"application_id": str(app_id), "run_id": str(run_id)}
 
-@app.get("/{id}", response_model=ApplicationStatusResponse)
+@router.get("/{id}", response_model=ApplicationStatusResponse)
 async def get_application_status(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
     result = await db.execute(select(Application).where(Application.application_id == id))
     db_app = result.scalar_one_or_none()
@@ -87,7 +87,7 @@ async def get_application_status(id: uuid.UUID, db: AsyncSession = Depends(get_d
         "missing_fields": state.values.get("missing_fields", []) if state else []
     }
 
-@app.post("/{id}/reply")
+@router.post("/{id}/reply")
 async def student_reply(id: uuid.UUID, payload: dict, db: AsyncSession = Depends(get_db)):
     """
     Resumes the graph after student provides missing info.

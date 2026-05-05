@@ -16,6 +16,9 @@ dependencies = [
     "jinja2",
     "python-jose[cryptography]",
     "passlib[bcrypt]",
+    "email-validator",
+    "langgraph-checkpoint-postgres",
+    "psycopg-binary",
 ]
 
 [tool.uv]
