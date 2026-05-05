@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     API_VERSION: str = "0.1.0"
     
     # Database Settings
-    DATABASE_URL: str = "postgresql+asyncpg://user:pass@localhost:5432/edugrant"
+    DATABASE_URL: str = "postgresql+asyncpg://user:pass@localhost:5433/edugrant"
     
     # OpenAI Settings
     OPENAI_API_KEY: str = ""
