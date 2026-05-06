@@ -24,6 +24,20 @@ export const ApplicationDetail = () => {
     fetchData();
   }, [id]);
 
+  const handleAction = async (decision: 'approved' | 'rejected') => {
+    if (!id) return;
+    const reason = prompt(`Enter reason for ${decision}:`, `Manual ${decision} by admin`);
+    if (reason === null) return;
+    
+    try {
+        await api.overrideDecision(id, { decision, reason });
+        const data = await api.getApplicationDetail(id);
+        setApp(data);
+    } catch (error) {
+        alert('Failed to update decision');
+    }
+  };
+
   if (loading) return <PageWrapper><div className="pt-32 text-center font-black uppercase text-xs text-gray-400">Loading details...</div></PageWrapper>;
   if (!app) return <PageWrapper><div className="pt-32 text-center font-black uppercase text-xs text-gray-400">Application not found</div></PageWrapper>;
 
@@ -37,13 +51,21 @@ export const ApplicationDetail = () => {
                     <ChevronLeft className="w-5 h-5" />
                 </Link>
                 <div>
-                    <h1 className="text-serif text-4xl text-[#001F3F]">{app.student_email}</h1>
-                    <p className="text-xs font-black text-[#0066FF] uppercase tracking-widest mt-1">ID: {app.application_id}</p>
+                    <h1 className="text-serif text-4xl text-[#001F3F]">{app.application?.student_email}</h1>
+                    <p className="text-xs font-black text-[#0066FF] uppercase tracking-widest mt-1">ID: {app.application?.application_id}</p>
                 </div>
             </div>
             <div className="flex gap-4">
-                <button className="px-8 py-3 bg-white border border-gray-100 text-[#001F3F] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">Reject</button>
-                <button className="px-8 py-3 bg-[#001F3F] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl">Approve</button>
+                <button 
+                    onClick={() => handleAction('rejected')}
+                    className="px-8 py-3 bg-white border border-gray-100 text-[#001F3F] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all">
+                    Reject
+                </button>
+                <button 
+                    onClick={() => handleAction('approved')}
+                    className="px-8 py-3 bg-[#001F3F] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-xl">
+                    Approve
+                </button>
             </div>
           </header>
 

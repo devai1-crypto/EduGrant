@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Zap, CheckCircle2, Activity } from 'lucide-react';
+import { Zap, CheckCircle2, Activity, ShieldAlert } from 'lucide-react';
 import { PageWrapper } from '../../components/PageWrapper';
 import { api } from '../../lib/api';
 import type { ApplicationStatus } from '../../types/api';
@@ -75,6 +75,40 @@ export const StatusPage = () => {
                </div>
              ))}
           </div>
+
+          {progress === 3 && (
+            <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mt-16 max-w-xl mx-auto bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 shadow-2xl text-left">
+                <div className="flex items-center gap-4 mb-6">
+                    <div className="w-10 h-10 bg-[#FF3B30]/20 rounded-full flex items-center justify-center text-[#FF3B30]">
+                        <ShieldAlert className="w-6 h-6" />
+                    </div>
+                    <div className="text-left">
+                        <h3 className="text-xs font-black uppercase tracking-widest text-white">Action Required</h3>
+                        <p className="text-[10px] text-white/40 uppercase tracking-widest mt-1">AI Intelligence flags missing data</p>
+                    </div>
+                </div>
+                
+                <div className="space-y-4 mb-8">
+                    {status?.missing_fields.map((field, i) => (
+                        <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{field}</span>
+                            <span className="text-[9px] font-black uppercase tracking-widest text-[#0066FF]">Required</span>
+                        </div>
+                    ))}
+                </div>
+
+                <button 
+                    onClick={async () => {
+                        if (!appId) return;
+                        await api.studentReply(appId, { attachments: ['resumed_document.pdf'] });
+                        window.location.reload();
+                    }}
+                    className="w-full py-4 bg-white text-[#001F3F] rounded-xl text-[10px] font-black uppercase tracking-[0.2em] hover:bg-gray-200 transition-all shadow-xl">
+                    Resolve & Resume Extraction
+                </button>
+            </motion.div>
+          )}
+
 
           <div className="mt-24 flex items-center justify-center gap-8">
             <Link to="/" className="text-[10px] font-black text-gray-500 hover:text-white transition-colors uppercase tracking-[0.4em] cursor-pointer">Exit Session</Link>

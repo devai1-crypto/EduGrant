@@ -18,6 +18,16 @@ export const api = {
     return response.json();
   },
 
+  studentReply: async (id: string, payload: { attachments: string[] }) => {
+    const response = await fetch(`${API_BASE_URL}/applications/${id}/reply`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error('Failed to submit reply');
+    return response.json();
+  },
+
   // Admin Queue
   getAdminQueue: async () => {
     const response = await fetch(`${API_BASE_URL}/admin/queue`);
@@ -28,6 +38,16 @@ export const api = {
   getApplicationDetail: async (id: string) => {
     const response = await fetch(`${API_BASE_URL}/admin/applications/${id}`);
     if (!response.ok) throw new Error('Failed to fetch application detail');
+    return response.json();
+  },
+
+  overrideDecision: async (id: string, payload: { decision: 'approved' | 'rejected'; reason: string }) => {
+    const response = await fetch(`${API_BASE_URL}/admin/applications/${id}/override`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error('Failed to override decision');
     return response.json();
   },
 
