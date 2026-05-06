@@ -5,7 +5,7 @@ import uvicorn
 
 from .api import applications, admin, runs
 from .config import settings
-from .orchestrator.graph import build_graph, graph
+from .orchestrator.checkpointer import graph
 from .state.db import engine
 
 @asynccontextmanager

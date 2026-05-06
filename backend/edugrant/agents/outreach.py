@@ -4,7 +4,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from ..state.graph_state import EduGrantState
 from ..state.schemas import OutreachDraft
 from ..config import settings
+from ..tools.audit import audit_event
 
+@audit_event("outreach")
 async def run(state: EduGrantState):
     """
     Drafts an outreach email when documents are missing.

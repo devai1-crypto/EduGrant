@@ -3,7 +3,9 @@ from langchain_core.prompts import ChatPromptTemplate
 from ..state.graph_state import EduGrantState
 from ..state.schemas import EligibilityResult
 from ..config import settings
+from ..tools.audit import audit_event
 
+@audit_event("eligibility")
 async def run(state: EduGrantState):
     """
     Applies the scholarship rubric to extracted data and produces a score.

@@ -5,7 +5,7 @@ from sqlalchemy import select
 from typing import List
 
 from ..state.db import get_db, AgentRun, AgentEvent
-from ..orchestrator.graph import graph
+from ..orchestrator.checkpointer import graph
 
 router = APIRouter(prefix="/api/runs", tags=["runs"])
 

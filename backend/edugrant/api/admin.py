@@ -4,8 +4,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import List
 
-from ..state.db import get_db, Application, Decision, AgentRun, AgentEvent
+from ..state.db import get_db, Application, Decision, AgentRun, AgentEvent, Attachment
 from ..state.schemas import AdminApplicationSummary
+from ..orchestrator.checkpointer import graph
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -51,9 +52,21 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
     )
     events = events_result.scalars().all()
     
+    # Get attachments
+    att_result = await db.execute(select(Attachment).where(Attachment.application_id == id))
+    attachments = att_result.scalars().all()
+    
+    # Get current state from LangGraph
+    config = {"configurable": {"thread_id": str(id)}}
+    state = await graph.aget_state(config)
+    extracted_data = state.values.get("extracted_data") if state else None
+    
     return {
         "application": db_app,
-        "audit_trail": events
+        "attachments": attachments,
+        "extracted_data": extracted_data,
+        "audit_trail": events,
+        "current_state": state.values if state else None
     }
 
 @router.post("/applications/{id}/override")

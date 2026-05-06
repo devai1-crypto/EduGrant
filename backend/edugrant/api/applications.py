@@ -4,29 +4,45 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import List
 
-from ..state.db import get_db, Application, Attachment, AgentRun, AgentEvent
+from ..state.db import get_db, Application, Attachment, AgentRun, AgentEvent, async_session
 from ..state.schemas import ApplicationPayload, ApplicationResponse, ApplicationStatusResponse
-from ..orchestrator.graph import graph
+from ..orchestrator.checkpointer import graph
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
 
-async def run_orchestrator(application_id: str, run_id: str):
+async def run_orchestrator(application_id: str, run_id: str, resume: bool = False):
     """
-    Background task to run the LangGraph.
+    Background task to run or resume the LangGraph.
     """
-    print(f"Starting orchestrator for app {application_id}, run {run_id}")
+    print(f"{'Resuming' if resume else 'Starting'} orchestrator for app {application_id}")
     try:
-        # Build initial state
-        initial_state = {
-            "application_id": application_id,
-            "run_id": run_id,
-            "audit_trail": [{"event": "start", "timestamp": "now"}]
-        }
-        
-        # Invoke graph
-        # Note: In production, we'd use thread_id for checkpointing
         config = {"configurable": {"thread_id": application_id}}
-        await graph.ainvoke(initial_state, config=config)
+        if resume:
+            # Resuming from a breakpoint (after outreach)
+            await graph.ainvoke(None, config=config)
+        else:
+            # New run: Fetch application details to populate initial state
+            async with async_session() as db:
+                result = await db.execute(
+                    select(Application).where(Application.application_id == uuid.UUID(application_id))
+                )
+                db_app = result.scalar_one_or_none()
+                
+                att_result = await db.execute(
+                    select(Attachment).where(Attachment.application_id == uuid.UUID(application_id))
+                )
+                db_attachments = att_result.scalars().all()
+                
+                manifest = [{"s3_key": att.s3_key, "filename": att.original_filename} for att in db_attachments]
+                
+                initial_state = {
+                    "application_id": application_id,
+                    "run_id": run_id,
+                    "raw_payload": db_app.raw_payload if db_app else {},
+                    "attachment_manifest": manifest,
+                    "audit_trail": [{"event": "start", "timestamp": "now"}]
+                }
+                await graph.ainvoke(initial_state, config=config)
     except Exception as e:
         print(f"Orchestrator Error: {e}")
 
@@ -88,14 +104,44 @@ async def get_application_status(id: uuid.UUID, db: AsyncSession = Depends(get_d
     }
 
 @router.post("/{id}/reply")
-async def student_reply(id: uuid.UUID, payload: dict, db: AsyncSession = Depends(get_db)):
+async def student_reply(id: uuid.UUID, payload: dict, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     """
     Resumes the graph after student provides missing info.
     """
-    # Logic to update state with new attachments and resume
+    result = await db.execute(select(Application).where(Application.application_id == id))
+    db_app = result.scalar_one_or_none()
+    if not db_app:
+        raise HTTPException(status_code=404, detail="Application not found")
+
+    # Add new attachments to DB
+    new_attachments = payload.get("attachments", [])
+    for s3_key in new_attachments:
+        db_attachment = Attachment(
+            application_id=id,
+            s3_key=s3_key,
+            mime_type="application/pdf",
+            original_filename=s3_key.split("/")[-1]
+        )
+        db.add(db_attachment)
+    
+    # Update status back to 'received' or 'processing'
+    db_app.status = "processing"
+    await db.commit()
+
+    # Update LangGraph state with new attachments and clear missing_fields
     config = {"configurable": {"thread_id": str(id)}}
-    # This would involve updating the state values and then ainvoking with None to resume
-    # For MVP simplicity:
-    # await graph.aupdate_state(config, {"new_attachments": payload.get("attachments")})
-    # await graph.ainvoke(None, config=config)
+    # We update the manifest in the state
+    current_state = await graph.aget_state(config)
+    manifest = current_state.values.get("attachment_manifest", [])
+    for s3_key in new_attachments:
+        manifest.append({"s3_key": s3_key, "filename": s3_key.split("/")[-1]})
+    
+    await graph.aupdate_state(config, {
+        "attachment_manifest": manifest,
+        "missing_fields": []
+    })
+
+    # Trigger resumption in background
+    background_tasks.add_task(run_orchestrator, str(id), None, resume=True)
+    
     return {"resumed": True}

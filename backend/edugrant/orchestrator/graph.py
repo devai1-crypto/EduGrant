@@ -52,6 +52,20 @@ async def decision_node(state: EduGrantState):
     return {
         "final_decision": final_dec
     }
+    
+async def failed_run_node(state: EduGrantState):
+    """
+    Node to handle and log failures.
+    """
+    print("---FAILED RUN---")
+    async with async_session() as db:
+        await db.execute(
+            update(AgentRun)
+            .where(AgentRun.run_id == state["run_id"])
+            .values(status="failed")
+        )
+        await db.commit()
+    return {"status": "failed"}
 
 # Routing logic
 def route_after_triage(state: EduGrantState) -> str:
@@ -73,6 +87,7 @@ def build_graph(checkpointer=None):
     workflow.add_node("eligibility", eligibility.run)
     workflow.add_node("outreach", outreach.run)
     workflow.add_node("decision", decision_node)
+    workflow.add_node("failed_run", failed_run_node)
     
     # Define the edges
     workflow.set_entry_point("triage")
@@ -96,14 +111,14 @@ def build_graph(checkpointer=None):
     )
     
     workflow.add_edge("eligibility", "decision")
-    workflow.add_edge("outreach", END) # interrupt_after handles the pause
+    workflow.add_edge("outreach", "doc_intel") # resume goes back to doc intel
     workflow.add_edge("decision", END)
+    workflow.add_edge("failed_run", END)
     
     return workflow.compile(
         checkpointer=checkpointer,
         interrupt_after=["outreach"]
     )
 
-# Note: The global graph instance will be built by the API layer with a real checkpointer
-# For now, we provide a default one for compatibility
-graph = build_graph()
+# Note: The global graph instance will be built by the checkpointer module
+# or the API layer with a real checkpointer.

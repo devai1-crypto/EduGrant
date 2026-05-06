@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from pydantic import BaseModel, Field
 from ..state.graph_state import EduGrantState
 from ..config import settings
+from ..tools.audit import audit_event
 
 class TriageOutput(BaseModel):
     scholarship_type: Literal["merit_undergrad"] = Field(description="The type of scholarship applied for")
@@ -11,6 +12,7 @@ class TriageOutput(BaseModel):
     routing_decision: Literal["proceed", "request_missing_info", "reject_invalid"] = Field(description="Next step in the workflow")
     triage_reasoning: str = Field(description="Explanation for the triage decision")
 
+@audit_event("triage")
 async def run(state: EduGrantState):
     """
     Classifies inbound applications and routes to the right downstream path.

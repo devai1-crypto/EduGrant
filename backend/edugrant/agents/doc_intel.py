@@ -5,7 +5,9 @@ from ..state.graph_state import EduGrantState
 from ..state.schemas import ExtractedData, StudentInfo, TranscriptInfo, IncomeProofInfo
 from ..config import settings
 from ..tools.s3 import get_presigned_url
+from ..tools.audit import audit_event
 
+@audit_event("doc_intel")
 async def run(state: EduGrantState):
     """
     Reads PDFs attached to the application and extracts structured data.
