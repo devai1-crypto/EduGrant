@@ -11,9 +11,15 @@ export const TraceUI = () => {
   const [events, setEvents] = useState<AgentEvent[]>([]);
   const [state, setState] = useState<AgentRunState | null>(null);
   const [activeNode, setActiveNode] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!runId) return;
+    if (!runId || runId === 'null' || runId === 'undefined') {
+      setIsLoading(false);
+      setError('Invalid Trace ID');
+      return;
+    }
 
     const fetchData = async () => {
       try {
@@ -23,6 +29,7 @@ export const TraceUI = () => {
         ]);
         setEvents(eventsData);
         setState(stateData);
+        setError(null);
         
         // Find current active node
         const lastStart = [...eventsData].reverse().find(e => e.event_type === 'start');
@@ -35,11 +42,14 @@ export const TraceUI = () => {
         }
       } catch (error) {
         console.error('Failed to fetch trace data:', error);
+        if (isLoading) setError('Trace not found or processing has not started');
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchData();
-    const interval = setInterval(fetchData, 2000);
+    const interval = setInterval(fetchData, 3000);
     return () => clearInterval(interval);
   }, [runId]);
 
@@ -78,38 +88,57 @@ export const TraceUI = () => {
           
           <div className="flex-1 bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 relative overflow-hidden flex flex-col p-12">
              <div className="flex-1 flex items-center justify-center overflow-x-auto">
-                <div className="relative flex items-center gap-24">
-                  {nodes.map((node, i) => {
-                    const status = getNodeStatus(node.id);
-                    return (
-                      <div key={node.id} className="relative flex flex-col items-center gap-6">
-                        {i < nodes.length - 1 && (
-                            <div className="absolute left-[100%] top-1/2 w-24 h-[1px] bg-white/10 -translate-y-1/2">
-                                <motion.div 
-                                    className="h-full bg-[#0066FF]"
-                                    initial={{ width: 0 }}
-                                    animate={{ width: status === 'OK' ? '100%' : '0%' }}
-                                />
-                            </div>
-                        )}
-                        <motion.div 
-                          animate={status === 'ACTIVE' ? { 
-                            scale: [1, 1.05, 1], 
-                            borderColor: ['rgba(0,102,255,0.2)', 'rgba(0,102,255,1)', 'rgba(0,102,255,0.2)'] 
-                          } : {}} 
-                          transition={{ duration: 2, repeat: Infinity }} 
-                          className={`w-32 h-32 rounded-[2.5rem] border-2 flex flex-col items-center justify-center gap-4 transition-all duration-700 ${status === 'OK' ? 'border-green-500 bg-green-500/5' : status === 'ACTIVE' ? 'border-[#0066FF] bg-[#0066FF]/10' : 'border-white/10 bg-white/5'}`}
-                        >
-                          {status === 'OK' ? <ShieldCheck className="text-green-500 w-8 h-8" /> : status === 'ACTIVE' ? <Zap className="text-[#0066FF] w-8 h-8 animate-pulse" /> : <Clock className="text-white/20 w-8 h-8" />}
-                          <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white text-center px-4">{node.label}</span>
-                        </motion.div>
-                      </div>
-                    );
-                  })}
-                </div>
+                {isLoading ? (
+                  <div className="flex flex-col items-center gap-6">
+                    <Activity className="w-12 h-12 text-[#0066FF] animate-spin" />
+                    <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Synchronizing with Agent State...</p>
+                  </div>
+                ) : error ? (
+                  <div className="flex flex-col items-center gap-8 text-center max-w-md">
+                    <div className="w-20 h-20 bg-red-500/10 rounded-[2.5rem] flex items-center justify-center border border-red-500/20">
+                      <ShieldCheck className="text-red-500 w-8 h-8" />
+                    </div>
+                    <div>
+                      <h2 className="text-2xl text-white mb-3">Trace Unavailable</h2>
+                      <p className="text-xs text-white/40 font-bold uppercase tracking-widest leading-relaxed">{error}</p>
+                    </div>
+                    <Link to="/admin" className="px-8 py-3 bg-white text-[#001F3F] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all">Back to Dashboard</Link>
+                  </div>
+                ) : (
+                  <div className="relative flex items-center gap-24">
+                    {nodes.map((node, i) => {
+                      const status = getNodeStatus(node.id);
+                      return (
+                        <div key={node.id} className="relative flex flex-col items-center gap-6">
+                          {i < nodes.length - 1 && (
+                              <div className="absolute left-[100%] top-1/2 w-24 h-[1px] bg-white/10 -translate-y-1/2">
+                                  <motion.div 
+                                      className="h-full bg-[#0066FF]"
+                                      initial={{ width: 0 }}
+                                      animate={{ width: status === 'OK' ? '100%' : '0%' }}
+                                  />
+                              </div>
+                          )}
+                          <motion.div 
+                            animate={status === 'ACTIVE' ? { 
+                              scale: [1, 1.05, 1], 
+                              borderColor: ['rgba(0,102,255,0.2)', 'rgba(0,102,255,1)', 'rgba(0,102,255,0.2)'] 
+                            } : {}} 
+                            transition={{ duration: 2, repeat: Infinity }} 
+                            className={`w-32 h-32 rounded-[2.5rem] border-2 flex flex-col items-center justify-center gap-4 transition-all duration-700 ${status === 'OK' ? 'border-green-500 bg-green-500/5' : status === 'ACTIVE' ? 'border-[#0066FF] bg-[#0066FF]/10' : 'border-white/10 bg-white/5'}`}
+                          >
+                            {status === 'OK' ? <ShieldCheck className="text-green-500 w-8 h-8" /> : status === 'ACTIVE' ? <Zap className="text-[#0066FF] w-8 h-8 animate-pulse" /> : <Clock className="text-white/20 w-8 h-8" />}
+                            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white text-center px-4">{node.label}</span>
+                          </motion.div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
              </div>
 
-             <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 h-48">
+             {!isLoading && !error && (
+               <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-8 h-48">
                 <div className="bg-black/20 rounded-2xl border border-white/5 p-6 overflow-y-auto">
                     <h3 className="text-[8px] font-black text-white/30 uppercase tracking-widest mb-4">Event Stream</h3>
                     <div className="space-y-3">
@@ -130,7 +159,8 @@ export const TraceUI = () => {
                         {JSON.stringify(state, null, 2)}
                     </pre>
                 </div>
-             </div>
+              </div>
+             )}
           </div>
         </div>
       </div>

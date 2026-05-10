@@ -68,6 +68,7 @@ class AdminApplicationSummary(BaseModel):
     application_id: str
     student_name: str
     gpa: float
+    status: str
+    latest_run_id: Optional[str] = None
     eligibility_score: Optional[int] = None
     recommendation: Optional[str] = None
-    status: str

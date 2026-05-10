@@ -26,11 +26,21 @@ async def get_admin_queue(db: AsyncSession = Depends(get_db)):
         )
         latest_dec = dec_result.scalar_one_or_none()
         
+        # Get latest run
+        run_result = await db.execute(
+            select(AgentRun)
+            .where(AgentRun.application_id == app.application_id)
+            .order_by(AgentRun.created_at.desc())
+            .limit(1)
+        )
+        latest_run = run_result.scalar_one_or_none()
+        
         summaries.append({
             "application_id": str(app.application_id),
             "student_name": app.raw_payload.get("fullName", "Unknown"),
             "gpa": float(app.raw_payload.get("gpa", 0.0)),
             "status": app.status,
+            "latest_run_id": str(latest_run.run_id) if latest_run else None,
             "eligibility_score": latest_dec.eligibility_score if latest_dec else None,
             "recommendation": latest_dec.final_decision if latest_dec else None
         })
