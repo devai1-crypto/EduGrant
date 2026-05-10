@@ -77,19 +77,19 @@ export const ApplicationDetail = () => {
                     <div className="grid grid-cols-2 gap-10">
                         <div>
                             <span className="block text-[8px] font-black uppercase text-gray-400 mb-2">Full Name</span>
-                            <span className="text-sm font-bold text-[#001F3F]">{app.extracted_data?.student?.full_name || 'N/A'}</span>
+                            <span className="text-sm font-bold text-[#001F3F]">{app.extracted_data?.student_info?.full_name || 'N/A'}</span>
                         </div>
                         <div>
                             <span className="block text-[8px] font-black uppercase text-gray-400 mb-2">Institution</span>
-                            <span className="text-sm font-bold text-[#001F3F]">{app.extracted_data?.academic?.institution || 'N/A'}</span>
+                            <span className="text-sm font-bold text-[#001F3F]">{app.extracted_data?.transcript_info?.institution || 'N/A'}</span>
                         </div>
                         <div>
                             <span className="block text-[8px] font-black uppercase text-gray-400 mb-2">GPA</span>
-                            <span className="text-sm font-bold text-[#0066FF]">{app.extracted_data?.academic?.gpa || 'N/A'}</span>
+                            <span className="text-sm font-bold text-[#0066FF]">{app.extracted_data?.transcript_info?.gpa || 'N/A'}</span>
                         </div>
                         <div>
                             <span className="block text-[8px] font-black uppercase text-gray-400 mb-2">Annual Income</span>
-                            <span className="text-sm font-bold text-[#001F3F]">${app.extracted_data?.financial?.income || 'N/A'}</span>
+                            <span className="text-sm font-bold text-[#001F3F]">${app.extracted_data?.income_proof?.annual_income || 'N/A'}</span>
                         </div>
                     </div>
                 </section>
@@ -119,7 +119,7 @@ export const ApplicationDetail = () => {
                     <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-bl-[5rem]" />
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40 mb-8">AI Decision Logic</h3>
                     <div className="flex items-baseline gap-2 mb-8">
-                        <span className="text-6xl font-serif text-[#0066FF]">{app.eligibility_result?.score || '--'}</span>
+                        <span className="text-6xl font-serif text-[#0066FF]">{app.eligibility_result?.eligibility_score || '--'}</span>
                         <span className="text-xs font-black uppercase tracking-widest text-white/40">/ 100</span>
                     </div>
                     <div className="space-y-6">

@@ -60,11 +60,13 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
     config = {"configurable": {"thread_id": str(id)}}
     state = await graph.aget_state(config)
     extracted_data = state.values.get("extracted_data") if state else None
+    eligibility_result = state.values.get("eligibility_result") if state else None
     
     return {
         "application": db_app,
         "attachments": attachments,
         "extracted_data": extracted_data,
+        "eligibility_result": eligibility_result,
         "audit_trail": events,
         "current_state": state.values if state else None
     }
