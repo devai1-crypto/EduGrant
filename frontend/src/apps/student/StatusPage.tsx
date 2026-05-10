@@ -12,16 +12,22 @@ export const StatusPage = () => {
   const appId = searchParams.get('appId');
   const [status, setStatus] = useState<ApplicationStatus | null>(null);
   const [progress, setProgress] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!appId) return;
+    if (!appId) {
+      setIsLoading(false);
+      setError('No Application ID provided');
+      return;
+    }
 
     const fetchStatus = async () => {
       try {
         const data = await api.getApplicationStatus(appId);
         setStatus(data);
+        setError(null);
         
-        // Map status/node to progress step
         const nodeMap: { [key: string]: number } = {
           'received': 1,
           'triage': 2,
@@ -32,13 +38,16 @@ export const StatusPage = () => {
           'completed': 4
         };
         
-        if (data.status === 'completed') {
+        if (data.status === 'completed' || data.status === 'approved' || data.status === 'rejected') {
             setProgress(4);
         } else {
             setProgress(nodeMap[data.current_node] || 1);
         }
-      } catch (error) {
-        console.error('Failed to fetch status:', error);
+      } catch (err: any) {
+        console.error('Failed to fetch status:', err);
+        if (isLoading) setError('Application not found or connection error');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -53,11 +62,33 @@ export const StatusPage = () => {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#0066FF]/10 rounded-full blur-[120px] animate-pulse" />
         
         <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="relative z-10 w-full max-w-4xl text-center">
-          <div className="w-20 h-20 bg-white/5 backdrop-blur-2xl rounded-[2rem] flex items-center justify-center mb-12 mx-auto border border-white/10 shadow-2xl">
-            <Zap className="text-[#0066FF] w-8 h-8 fill-current" />
-          </div>
-          <h1 className="text-serif text-6xl text-white mb-6">Evaluating <br /><span className="italic font-light text-[#0066FF]">Intelligence.</span></h1>
+          {isLoading ? (
+            <div className="flex flex-col items-center gap-6">
+              <Activity className="w-12 h-12 text-[#0066FF] animate-spin" />
+              <p className="text-[10px] font-black uppercase tracking-[0.4em] text-white/40">Synchronizing with Intelligence...</p>
+            </div>
+          ) : error ? (
+            <div className="flex flex-col items-center gap-8">
+              <div className="w-20 h-20 bg-red-500/10 rounded-[2rem] flex items-center justify-center border border-red-500/20">
+                <ShieldAlert className="text-red-500 w-8 h-8" />
+              </div>
+              <div>
+                <h1 className="text-serif text-5xl text-white mb-4">Access <span className="italic font-light text-red-500">Denied.</span></h1>
+                <p className="text-white/40 text-xs font-bold uppercase tracking-widest">{error}</p>
+              </div>
+              <Link to="/" className="px-8 py-4 bg-white text-[#001F3F] rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-200 transition-all">Return to Terminal</Link>
+            </div>
+          ) : (
+            <>
+              <div className="w-20 h-20 bg-white/5 backdrop-blur-2xl rounded-[2rem] flex items-center justify-center mb-12 mx-auto border border-white/10 shadow-2xl">
+                <Zap className="text-[#0066FF] w-8 h-8 fill-current" />
+              </div>
+              <h1 className="text-serif text-6xl text-white mb-6">Evaluating <br /><span className="italic font-light text-[#0066FF]">Intelligence.</span></h1>
+            </>
+          )}
           
+          {!isLoading && !error && (
+            <>
           <div className="mt-16 flex items-center justify-between max-w-2xl mx-auto relative px-4">
              <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/10 -translate-y-1/2" />
              <div className="absolute top-1/2 left-0 h-[1px] bg-[#0066FF] -translate-y-1/2 transition-all duration-1000" style={{ width: `${((progress - 1) / 3) * 100}%` }} />
@@ -124,6 +155,8 @@ export const StatusPage = () => {
                 </Link>
              </div>
           </div>
+            </>
+          )}
         </motion.div>
       </div>
     </PageWrapper>

@@ -17,6 +17,7 @@ export interface ApplicationResponse {
 
 export interface ApplicationStatus {
   status: string;
+  run_id?: string;
   current_node: string;
   last_event_at: string;
   missing_fields: string[];
