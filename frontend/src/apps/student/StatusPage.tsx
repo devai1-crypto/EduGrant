@@ -14,6 +14,7 @@ export const StatusPage = () => {
   const [progress, setProgress] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!appId) {
@@ -55,6 +56,14 @@ export const StatusPage = () => {
     const interval = setInterval(fetchStatus, 3000);
     return () => clearInterval(interval);
   }, [appId]);
+
+  const copyId = () => {
+    if (appId) {
+      navigator.clipboard.writeText(appId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    }
+  };
 
   return (
     <PageWrapper bg="bg-[#001F3F]">
@@ -142,9 +151,22 @@ export const StatusPage = () => {
 
 
           <div className="mt-24 flex flex-col items-center gap-8">
-             <div className="px-6 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
-                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40 block mb-2 text-center">Application Reference</span>
-                <code className="text-xs font-black text-[#0066FF] tracking-widest">{appId}</code>
+             <div className="px-8 py-5 bg-white/5 rounded-[2rem] border border-white/10 backdrop-blur-xl relative group min-w-[320px]">
+                <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/20 block mb-3 text-center">Application Reference</span>
+                <div className="flex items-center justify-between gap-4">
+                  <code className="text-sm font-black text-[#0066FF] tracking-widest">{appId}</code>
+                  <button 
+                    onClick={copyId}
+                    className="p-2 hover:bg-white/10 rounded-lg transition-all text-white/40 hover:text-white"
+                  >
+                    {copied ? <CheckCircle2 className="w-4 h-4 text-green-500" /> : <Activity className="w-4 h-4 rotate-90" />}
+                  </button>
+                </div>
+                {copied && (
+                  <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="absolute -top-12 left-1/2 -translate-x-1/2 px-4 py-2 bg-[#0066FF] text-white text-[9px] font-black uppercase tracking-widest rounded-lg shadow-xl">
+                    Copied to clipboard
+                  </motion.div>
+                )}
              </div>
 
              <div className="flex items-center justify-center gap-8">

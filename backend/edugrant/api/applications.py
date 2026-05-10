@@ -7,6 +7,7 @@ from typing import List
 from ..state.db import get_db, Application, Attachment, AgentRun, AgentEvent, async_session
 from ..state.schemas import ApplicationPayload, ApplicationResponse, ApplicationStatusResponse
 from ..orchestrator.checkpointer import graph
+from ..tools.email import send_outreach_email
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
 
@@ -46,6 +47,22 @@ async def run_orchestrator(application_id: str, run_id: str, resume: bool = Fals
     except Exception as e:
         print(f"Orchestrator Error: {e}")
 
+async def send_confirmation_email(email: str, application_id: str):
+    """
+    Sends a confirmation email to the student with their ID.
+    """
+    subject = "Application Received - EduGrant AI"
+    body = f"""
+    <h2>We've Received Your Application</h2>
+    <p>Thank you for applying for a scholarship via EduGrant AI. Your application has been successfully submitted and is currently being processed by our intelligent agents.</p>
+    <p><b>Your Application Reference ID:</b> {application_id}</p>
+    <p>You can track the live progress of your application at any time using the link below:</p>
+    <p><a href='http://localhost:5173/status/latest?appId={application_id}'>Track Application Status</a></p>
+    <br/>
+    <p>Best regards,<br/>EduGrant Admissions Team</p>
+    """
+    send_outreach_email(email, subject, body)
+
 @router.post("", response_model=ApplicationResponse)
 async def submit_application(payload: ApplicationPayload, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     app_id = uuid.uuid4()
@@ -81,6 +98,7 @@ async def submit_application(payload: ApplicationPayload, background_tasks: Back
     await db.commit()
     
     background_tasks.add_task(run_orchestrator, str(app_id), str(run_id))
+    background_tasks.add_task(send_confirmation_email, student_email, str(app_id))
     
     return {"application_id": str(app_id), "run_id": str(run_id)}
 
