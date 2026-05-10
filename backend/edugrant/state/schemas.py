@@ -51,6 +51,7 @@ class ApplicationResponse(BaseModel):
 
 class ApplicationStatusResponse(BaseModel):
     status: str
+    run_id: Optional[str] = None
     current_node: Optional[str] = None
     last_event_at: Optional[datetime] = None
     missing_fields: List[str] = []

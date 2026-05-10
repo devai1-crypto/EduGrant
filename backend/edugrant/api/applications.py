@@ -96,8 +96,15 @@ async def get_application_status(id: uuid.UUID, db: AsyncSession = Depends(get_d
     config = {"configurable": {"thread_id": str(id)}}
     state = await graph.aget_state(config)
     
+    # Get latest run_id
+    run_result = await db.execute(
+        select(AgentRun).where(AgentRun.application_id == id).order_by(AgentRun.started_at.desc()).limit(1)
+    )
+    db_run = run_result.scalar_one_or_none()
+    
     return {
         "status": db_app.status,
+        "run_id": str(db_run.run_id) if db_run else None,
         "current_node": state.next[0] if state and state.next else "completed",
         "last_event_at": db_app.updated_at,
         "missing_fields": state.values.get("missing_fields", []) if state else []

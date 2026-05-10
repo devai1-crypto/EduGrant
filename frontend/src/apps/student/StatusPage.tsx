@@ -110,12 +110,19 @@ export const StatusPage = () => {
           )}
 
 
-          <div className="mt-24 flex items-center justify-center gap-8">
-            <Link to="/" className="text-[10px] font-black text-gray-500 hover:text-white transition-colors uppercase tracking-[0.4em] cursor-pointer">Exit Session</Link>
-            <div className="w-1 h-1 bg-gray-800 rounded-full" />
-            <Link to={`/trace/${runId}`} className="text-[10px] font-black text-[#0066FF] hover:text-white transition-all uppercase tracking-[0.4em] flex items-center gap-2 group cursor-pointer">
-              View Agent Trace <Activity className="w-4 h-4 group-hover:rotate-12 transition-all" />
-            </Link>
+          <div className="mt-24 flex flex-col items-center gap-8">
+             <div className="px-6 py-3 bg-white/5 rounded-2xl border border-white/10 backdrop-blur-xl">
+                <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white/40 block mb-2 text-center">Application Reference</span>
+                <code className="text-xs font-black text-[#0066FF] tracking-widest">{appId}</code>
+             </div>
+
+             <div className="flex items-center justify-center gap-8">
+                <Link to="/" className="text-[10px] font-black text-gray-500 hover:text-white transition-colors uppercase tracking-[0.4em] cursor-pointer">Exit Session</Link>
+                <div className="w-1 h-1 bg-gray-800 rounded-full" />
+                <Link to={`/trace/${(runId && runId !== 'latest') ? runId : status?.run_id}`} className="text-[10px] font-black text-[#0066FF] hover:text-white transition-all uppercase tracking-[0.4em] flex items-center gap-2 group cursor-pointer">
+                  View Agent Trace <Activity className="w-4 h-4 group-hover:rotate-12 transition-all" />
+                </Link>
+             </div>
           </div>
         </motion.div>
       </div>
