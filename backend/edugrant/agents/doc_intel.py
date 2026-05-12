@@ -1,5 +1,8 @@
 import os
-import fitz  # PyMuPDF
+try:
+    import fitz  # PyMuPDF
+except ImportError:
+    fitz = None
 import urllib.request
 import tempfile
 from typing import List, Optional
@@ -15,6 +18,10 @@ async def extract_text_pymupdf(url: str) -> str:
     """
     Downloads the PDF from the presigned URL and extracts text using PyMuPDF.
     """
+    if fitz is None:
+        print("WARNING: PyMuPDF (fitz) not installed. Falling back to self-reported data.")
+        return ""
+        
     try:
         with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
             urllib.request.urlretrieve(url, tmp.name)

@@ -15,17 +15,9 @@ from .orchestrator import checkpointer as cp
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize LangGraph checkpointer with Postgres if available
-    if settings.DATABASE_URL.startswith("postgresql"):
-        # Psycopg (v3) used by PostgresSaver expects 'postgresql://' not 'postgresql+asyncpg://'
-        connection_url = settings.DATABASE_URL.replace("+asyncpg", "")
-        async with AsyncConnectionPool(connection_url, max_size=20) as pool:
-            checkpointer = PostgresSaver(pool)
-            # await checkpointer.setup() # Usually handled by the app or migrations
-            cp.graph = build_graph(checkpointer)
-            yield
-    else:
-        yield
+    # Startup: Initialize LangGraph checkpointer
+    # For local development, we use the default MemorySaver from checkpointer module
+    yield
     
     # Shutdown: Clean up resources
     await engine.dispose()

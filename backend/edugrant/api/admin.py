@@ -41,15 +41,34 @@ async def get_admin_queue(db: AsyncSession = Depends(get_db)):
         # Get state from LangGraph
         state = None
         if latest_run:
-            config = {"configurable": {"thread_id": str(app.application_id)}}
-            state = await graph.aget_state(config)
+            try:
+                config = {"configurable": {"thread_id": str(app.application_id)}}
+                state = await graph.aget_state(config)
+            except Exception as e:
+                print(f"Error fetching state for {app.application_id}: {e}")
             
-        extracted_data = state.values.get("extracted_data") if state and state.values else {}
+        # Safely extract data with multiple fallbacks
+        state_values = state.values if state and state.values else {}
+        extracted_data = state_values.get("extracted_data") or {}
+        if not isinstance(extracted_data, dict): extracted_data = {}
+        
+        student_info = extracted_data.get("student_info") or {}
+        if not isinstance(student_info, dict): student_info = {}
+        
+        transcript_info = extracted_data.get("transcript_info") or {}
+        if not isinstance(transcript_info, dict): transcript_info = {}
+
+        student_name = student_info.get("full_name") or app.raw_payload.get("fullName") or app.raw_payload.get("full_name") or "Unknown"
+        gpa = transcript_info.get("gpa") or app.raw_payload.get("gpa") or 0.0
+        try:
+            gpa = float(gpa)
+        except:
+            gpa = 0.0
         
         summaries.append({
             "application_id": str(app.application_id),
-            "student_name": extracted_data.get("student_info", {}).get("full_name") or app.raw_payload.get("fullName") or "Unknown",
-            "gpa": float(extracted_data.get("transcript_info", {}).get("gpa") or app.raw_payload.get("gpa") or 0.0),
+            "student_name": student_name,
+            "gpa": gpa,
             "status": app.status,
             "latest_run_id": str(latest_run.run_id) if latest_run else None,
             "eligibility_score": latest_dec.eligibility_score if latest_dec else None,
