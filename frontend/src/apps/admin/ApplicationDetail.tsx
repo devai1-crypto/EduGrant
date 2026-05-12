@@ -121,7 +121,7 @@ export const ApplicationDetail = () => {
                                     <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-300 group-hover:text-[#0066FF] transition-all">
                                         <FileText className="w-5 h-5" />
                                     </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-[#001F3F]">{at.original_filename}</span>
+                                    <span className="text-[10px] font-black uppercase tracking-widest text-[#001F3F]">{at.filename}</span>
                                 </div>
                                 <CheckCircle2 className="text-green-500 w-4 h-4" />
                             </div>
