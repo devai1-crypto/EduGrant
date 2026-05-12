@@ -1,5 +1,10 @@
 const API_BASE_URL = '/api';
 
+const getAuthHeaders = () => {
+  const password = localStorage.getItem('edugrant_admin_auth_password');
+  return password ? { 'Authorization': `Bearer ${password}` } : {};
+};
+
 export const api = {
   // Student Applications
   submitApplication: async (payload: { scholarship_type: string; form_data: any; attachments: string[] }) => {
@@ -30,13 +35,21 @@ export const api = {
 
   // Admin Queue
   getAdminQueue: async () => {
-    const response = await fetch(`${API_BASE_URL}/admin/queue`);
+    const response = await fetch(`${API_BASE_URL}/admin/queue`, {
+      headers: getAuthHeaders()
+    });
+    if (response.status === 401) {
+        localStorage.removeItem('edugrant_admin_auth');
+        window.location.href = '/admin';
+    }
     if (!response.ok) throw new Error('Failed to fetch admin queue');
     return response.json();
   },
 
   getApplicationDetail: async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/admin/applications/${id}`);
+    const response = await fetch(`${API_BASE_URL}/admin/applications/${id}`, {
+      headers: getAuthHeaders()
+    });
     if (!response.ok) throw new Error('Failed to fetch application detail');
     return response.json();
   },
@@ -44,7 +57,10 @@ export const api = {
   overrideDecision: async (id: string, payload: { decision: 'approved' | 'rejected'; reason: string }) => {
     const response = await fetch(`${API_BASE_URL}/admin/applications/${id}/override`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
       body: JSON.stringify(payload),
     });
     if (!response.ok) throw new Error('Failed to override decision');
@@ -53,14 +69,26 @@ export const api = {
 
   // Agent Traces
   getRunEvents: async (runId: string) => {
-    const response = await fetch(`${API_BASE_URL}/runs/${runId}/events`);
+    const response = await fetch(`${API_BASE_URL}/runs/${runId}/events`, {
+      headers: getAuthHeaders()
+    });
     if (!response.ok) throw new Error('Failed to fetch run events');
     return response.json();
   },
 
   getRunState: async (runId: string) => {
-    const response = await fetch(`${API_BASE_URL}/runs/${runId}/state`);
+    const response = await fetch(`${API_BASE_URL}/runs/${runId}/state`, {
+      headers: getAuthHeaders()
+    });
     if (!response.ok) throw new Error('Failed to fetch run state');
     return response.json();
+  },
+
+  verifyAdminAuth: async (password: string) => {
+    // We use getAdminQueue as a way to verify the password
+    const response = await fetch(`${API_BASE_URL}/admin/queue`, {
+      headers: { 'Authorization': `Bearer ${password}` }
+    });
+    return response.ok;
   }
 };

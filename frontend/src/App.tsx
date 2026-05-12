@@ -13,6 +13,7 @@ import { AdminDashboard } from './apps/admin/AdminDashboard';
 import { ApplicationDetail } from './apps/admin/ApplicationDetail';
 import { AdminLogin } from './apps/admin/AdminLogin';
 import { TraceUI } from './apps/trace/TraceUI';
+import { api } from './lib/api';
 
 function AppContent() {
   const location = useLocation();
@@ -20,16 +21,21 @@ function AppContent() {
     return localStorage.getItem('edugrant_admin_auth') === 'true';
   });
 
-  const handleLogin = (password: string) => {
-    if (password === '13092025') {
+  const handleLogin = async (password: string) => {
+    const isValid = await api.verifyAdminAuth(password);
+    if (isValid) {
       setIsAdmin(true);
       localStorage.setItem('edugrant_admin_auth', 'true');
+      localStorage.setItem('edugrant_admin_auth_password', password);
+    } else {
+      alert('Invalid admin credentials');
     }
   };
 
   const handleLogout = () => {
     setIsAdmin(false);
     localStorage.removeItem('edugrant_admin_auth');
+    localStorage.removeItem('edugrant_admin_auth_password');
   };
   
   return (

@@ -7,8 +7,9 @@ from typing import List
 from ..state.db import get_db, Application, Decision, AgentRun, AgentEvent, Attachment
 from ..state.schemas import AdminApplicationSummary
 from ..orchestrator.checkpointer import graph
+from .deps import verify_admin_token
 
-router = APIRouter(prefix="/api/admin", tags=["admin"])
+router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(verify_admin_token)])
 
 @router.get("/queue", response_model=List[AdminApplicationSummary])
 async def get_admin_queue(db: AsyncSession = Depends(get_db)):

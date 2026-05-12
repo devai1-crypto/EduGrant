@@ -25,6 +25,7 @@ class Settings(BaseSettings):
     # Security Settings
     SECRET_KEY: str = "super-secret-key"
     ALGORITHM: str = "HS256"
+    ADMIN_PASSWORD: str = "13092025"
     
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

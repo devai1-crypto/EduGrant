@@ -6,8 +6,9 @@ from typing import List
 
 from ..state.db import get_db, AgentRun, AgentEvent
 from ..orchestrator.checkpointer import graph
+from .deps import verify_admin_token
 
-router = APIRouter(prefix="/api/runs", tags=["runs"])
+router = APIRouter(prefix="/api/runs", tags=["runs"], dependencies=[Depends(verify_admin_token)])
 
 @router.get("/{run_id}/events")
 async def get_run_events(run_id: uuid.UUID, db: AsyncSession = Depends(get_db)):
