@@ -1,0 +1,45 @@
+{
+  "name": "Merit-Based Undergraduate Scholarship",
+  "description": "Awarded to undergraduate students based on academic excellence and financial need.",
+  "criteria": [
+    {
+      "name": "Academic Excellence",
+      "weight": 0.5,
+      "description": "GPA and course rigor. 4.0 is perfect, < 3.0 is ineligible.",
+      "rubric": {
+        "4.0": 100,
+        "3.8-3.9": 90,
+        "3.5-3.7": 80,
+        "3.0-3.4": 60,
+        "< 3.0": 0
+      }
+    },
+    {
+      "name": "Financial Need",
+      "weight": 0.3,
+      "description": "Annual household income. < $50k is high need.",
+      "rubric": {
+        "< $30k": 100,
+        "$30k-$60k": 80,
+        "$60k-$90k": 40,
+        "> $90k": 10
+      }
+    },
+    {
+      "name": "Personal Statement",
+      "weight": 0.2,
+      "description": "Quality of essay and alignment with goals.",
+      "rubric": {
+        "Outstanding": 100,
+        "Good": 80,
+        "Average": 50,
+        "Poor": 20
+      }
+    }
+  ],
+  "thresholds": {
+    "auto_approve": 85,
+    "auto_reject": 40,
+    "human_review": 60
+  }
+}

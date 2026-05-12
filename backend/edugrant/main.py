@@ -8,15 +8,23 @@ from .config import settings
 from .orchestrator.checkpointer import graph
 from .state.db import engine
 
+from langgraph.checkpoint.postgres import PostgresSaver
+from psycopg_pool import AsyncConnectionPool
+from .orchestrator.graph import build_graph
+from .orchestrator import checkpointer as cp
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup: Initialize DB and LangGraph checkpointer if needed
-    # In a real setup with PostgresSaver:
-    # checkpointer = PostgresSaver(engine)
-    # await checkpointer.setup()
-    # global graph
-    # graph = build_graph(checkpointer)
-    yield
+    # Startup: Initialize LangGraph checkpointer with Postgres if available
+    if settings.DATABASE_URL.startswith("postgresql"):
+        async with AsyncConnectionPool(settings.DATABASE_URL, max_size=20) as pool:
+            checkpointer = PostgresSaver(pool)
+            # await checkpointer.setup() # Usually handled by the app or migrations
+            cp.graph = build_graph(checkpointer)
+            yield
+    else:
+        yield
+    
     # Shutdown: Clean up resources
     await engine.dispose()
 

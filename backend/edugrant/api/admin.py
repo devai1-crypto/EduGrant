@@ -31,7 +31,7 @@ async def get_admin_queue(db: AsyncSession = Depends(get_db)):
         run_result = await db.execute(
             select(AgentRun)
             .where(AgentRun.application_id == app.application_id)
-            .order_by(AgentRun.created_at.desc())
+            .order_by(AgentRun.started_at.desc())
             .limit(1)
         )
         latest_run = run_result.scalar_one_or_none()

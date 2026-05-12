@@ -1,9 +1,22 @@
+import os
+import json
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from ..state.graph_state import EduGrantState
 from ..state.schemas import EligibilityResult
 from ..config import settings
 from ..tools.audit import audit_event
+
+def load_rubric(scholarship_type: str):
+    """
+    Loads the rubric for a given scholarship type from JSON.
+    """
+    base_path = os.path.dirname(__file__)
+    rubric_path = os.path.join(base_path, "..", "rubrics", f"{scholarship_type}.json")
+    if os.path.exists(rubric_path):
+        with open(rubric_path, "r") as f:
+            return json.load(f)
+    return None
 
 @audit_event("eligibility")
 async def run(state: EduGrantState):
@@ -22,23 +35,25 @@ async def run(state: EduGrantState):
 
     llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(EligibilityResult)
     
-    prompt = ChatPromptTemplate.from_messages([
-        ("system", "You are the Eligibility Scoring Agent. Evaluate the student's extracted data against the scholarship rubric. "
-                   "Provide a score from 0-100 and a recommendation (auto_approve, auto_reject, human_review). "
-                   "Include your reasoning chain."),
-        ("user", "Extracted Data: {data}\nRubric: {rubric}")
-    ])
+    # Load rubric based on scholarship type
+    scholarship_type = state.get("scholarship_type", "merit_undergrad")
+    rubric = load_rubric(scholarship_type)
     
-    # Simple default rubric for MVP
-    rubric = "GPA > 3.5: 50 points. Financial need documented: 30 points. Personal essay quality: 20 points."
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", "You are the Eligibility Scoring Agent for EduGrant AI. Evaluate the student's extracted data against the provided institutional rubric. "
+                   "Provide a score from 0-100 and a recommendation (auto_approve, auto_reject, human_review). "
+                   "Include your reasoning chain clearly mapping criteria to scores."),
+        ("user", "Extracted Data: {data}\n\nInstitutional Rubric:\n{rubric}")
+    ])
     
     chain = prompt | llm
     
     result = await chain.ainvoke({
         "data": state.get("extracted_data"),
-        "rubric": rubric
+        "rubric": json.dumps(rubric, indent=2) if rubric else "No rubric found."
     })
     
     return {
         "eligibility_result": result
     }
+

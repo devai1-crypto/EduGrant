@@ -1,9 +1,16 @@
+import os
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.postgres import PostgresSaver
+from psycopg_pool import AsyncConnectionPool
 from .graph import build_graph
+from ..config import settings
 
-# For MVP simplicity, we use MemorySaver. 
-# In a real production environment, use PostgresSaver as specified in the design doc.
+# In production, we use PostgresSaver for persistence
+# In development, we fallback to MemorySaver if no DB is configured
 checkpointer = MemorySaver()
 
-# Re-build graph with checkpointer
+# We'll build the graph here
 graph = build_graph(checkpointer)
+
+# Note: For PostgresSaver, we need an active connection pool.
+# This is usually initialized in the main.py startup or similar.

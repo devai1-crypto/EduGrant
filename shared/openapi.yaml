@@ -1,0 +1,20 @@
+openapi: 3.0.0
+info:
+  title: EduGrant AI API
+  version: 1.0.0
+  description: API for the EduGrant AI scholarship automation platform.
+paths:
+  /api/applications:
+    post:
+      summary: Submit a new application
+      tags: [applications]
+      responses:
+        '200':
+          description: Application submitted successfully
+  /api/admin/queue:
+    get:
+      summary: Get the list of applications for admin review
+      tags: [admin]
+      responses:
+        '200':
+          description: List of applications
