@@ -101,7 +101,7 @@ export const ApplicationDetail = () => {
                         <div>
                             <span className="block text-[8px] font-black uppercase text-gray-400 mb-2">Annual Income</span>
                             <span className="text-sm font-bold text-[#001F3F]">
-                                ${app.extracted_data?.income_proof?.annual_income || app.application?.raw_payload?.annual_income || app.application?.raw_payload?.annualIncome || 'N/A'}
+                                ${app.extracted_data?.income_proof?.annual_income || app.application?.raw_payload?.annual_income || app.application?.raw_payload?.annualIncome || app.application?.raw_payload?.income || 'N/A'}
                             </span>
                         </div>
                     </div>
