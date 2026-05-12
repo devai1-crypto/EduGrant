@@ -1,5 +1,6 @@
 import uuid
-from fastapi import APIRouter, Depends, HTTPException
+from datetime import datetime
+from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import List
@@ -112,24 +113,98 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
 
 @router.post("/applications/{id}/override")
 async def override_decision(id: uuid.UUID, payload: dict, db: AsyncSession = Depends(get_db)):
-    decision = payload.get("decision")
-    reason = payload.get("reason", "Manual override")
-    
-    await db.execute(
-        update(Application)
-        .where(Application.application_id == id)
-        .values(status=decision)
+    try:
+        decision = payload.get("decision")
+        reason = payload.get("reason", "Manual override")
+        
+        print(f"DEBUG: Overriding {id} to {decision} with reason: {reason}")
+
+        await db.execute(
+            update(Application)
+            .where(Application.application_id == id)
+            .values(status=decision)
+        )
+        
+        # Log the override decision
+        db_decision = Decision(
+            application_id=id,
+            final_decision=decision,
+            reasoning_text=reason,
+            decided_by="admin",
+            eligibility_score=100 if decision == 'approved' else 0
+        )
+        db.add(db_decision)
+        await db.commit()
+        
+        return {"status": "overridden", "new_status": decision}
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/applications/{id}/decision")
+async def record_manual_decision(
+    id: uuid.UUID,
+    decision: dict, # { "final_decision": "approved", "reasoning_text": "..." }
+    db: AsyncSession = Depends(get_db)
+):
+    # Verify application exists
+    result = await db.execute(select(Application).where(Application.application_id == id))
+    db_app = result.scalar_one_or_none()
+    if not db_app:
+        raise HTTPException(status_code=404, detail="Application not found")
+        
+    # Get latest run_id if exists
+    run_result = await db.execute(
+        select(AgentRun.run_id)
+        .where(AgentRun.application_id == id)
+        .order_by(AgentRun.started_at.desc())
+        .limit(1)
     )
+    run_id = run_result.scalar_one_or_none()
     
-    # Log the override decision
-    db_decision = Decision(
+    # Create manual decision record
+    new_decision = Decision(
         application_id=id,
-        final_decision=decision,
-        reasoning_text=reason,
-        decided_by="admin",
-        eligibility_score=100 # Default for manual approval
+        run_id=run_id,
+        final_decision=decision.get("final_decision"),
+        reasoning_text=decision.get("reasoning_text"),
+        eligibility_score=100 if decision.get("final_decision") == "approved" else 0,
+        decided_by="admin_manual",
+        decided_at=datetime.utcnow()
     )
-    db.add(db_decision)
+    
+    # Update application status
+    db_app.status = decision.get("final_decision")
+    
+    db.add(new_decision)
     await db.commit()
     
-    return {"status": "overridden", "new_status": decision}
+    return {"status": "success", "message": "Decision recorded"}
+@router.post("/applications/{id}/reanalyze")
+async def reanalyze_application(id: uuid.UUID, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+    # Verify application exists
+    result = await db.execute(select(Application).where(Application.application_id == id))
+    db_app = result.scalar_one_or_none()
+    if not db_app:
+        raise HTTPException(status_code=404, detail="Application not found")
+        
+    # Reset application status
+    db_app.status = "processing"
+    
+    # Create a new AgentRun
+    run_id = uuid.uuid4()
+    db_run = AgentRun(
+        run_id=run_id,
+        application_id=id,
+        graph_version="v1.1-fixed-intel",
+        status="active"
+    )
+    db.add(db_run)
+    await db.commit()
+    
+    # Trigger orchestrator - we'll clear state by passing initial_state to a fresh thread_id or updating current
+    from .applications import run_orchestrator
+    background_tasks.add_task(run_orchestrator, str(id), str(run_id), resume=False)
+    
+    return {"status": "reanalysis_started", "run_id": str(run_id)}

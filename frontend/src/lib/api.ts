@@ -67,6 +67,28 @@ export const api = {
     return response.json();
   },
 
+  reanalyzeApplication: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/admin/applications/${id}/reanalyze`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to reanalyze');
+    return response.json();
+  },
+
+  recordManualDecision: async (id: string, decision: any) => {
+    const response = await fetch(`${API_BASE_URL}/admin/applications/${id}/decision`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(decision),
+    });
+    if (!response.ok) throw new Error('Failed to record decision');
+    return response.json();
+  },
+
   // Agent Traces
   getRunEvents: async (runId: string) => {
     const response = await fetch(`${API_BASE_URL}/runs/${runId}/events`, {

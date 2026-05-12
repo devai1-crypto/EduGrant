@@ -2,14 +2,14 @@ import boto3
 from ..config import settings
 
 def get_s3_client():
-    if not settings.R2_ACCOUNT_ID:
+    if not settings.R2_ACCOUNT_ID or settings.R2_ACCOUNT_ID == "your-account-id":
         # Local development with Minio
         return boto3.client(
             's3',
             endpoint_url="http://localhost:9000",
-            aws_access_key_id=settings.R2_ACCESS_KEY_ID or "r2_access_key",
-            aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY or "r2_secret_key",
-            region_name="us-east-1" # Minio default
+            aws_access_key_id="r2_access_key",
+            aws_secret_access_key="r2_secret_key",
+            region_name="us-east-1"
         )
     return boto3.client(
         's3',

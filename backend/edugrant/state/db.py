@@ -73,7 +73,7 @@ class Decision(Base):
     
     decision_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     application_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("applications.application_id"))
-    run_id: Mapped[uuid.UUID] = mapped_column(ForeignKey("agent_runs.run_id"))
+    run_id: Mapped[Optional[uuid.UUID]] = mapped_column(ForeignKey("agent_runs.run_id"))
     final_decision: Mapped[str] = mapped_column(String(50))
     eligibility_score: Mapped[int] = mapped_column(Integer)
     reasoning_text: Mapped[str] = mapped_column(String)
