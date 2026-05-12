@@ -26,7 +26,11 @@ async def run(state: EduGrantState):
             "triage_reasoning": "Mock triage: No API key provided, proceeding as default."
         }
 
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0).with_structured_output(TriageOutput)
+    llm = ChatOpenAI(
+        model="gpt-4o-mini", 
+        temperature=0,
+        api_key=settings.OPENAI_API_KEY
+    ).with_structured_output(TriageOutput)
     
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are the Triage Agent for EduGrant AI. Your job is to classify inbound scholarship applications. "

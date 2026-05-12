@@ -22,7 +22,11 @@ async def run(state: EduGrantState):
             "outreach_sent_at": "2024-05-04T12:00:00Z" # Mock sent timestamp
         }
 
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0).with_structured_output(OutreachDraft)
+    llm = ChatOpenAI(
+        model="gpt-4o-mini", 
+        temperature=0,
+        api_key=settings.OPENAI_API_KEY
+    ).with_structured_output(OutreachDraft)
     
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are the Outreach Agent. Draft a polite and professional email to the student asking for missing documents. "

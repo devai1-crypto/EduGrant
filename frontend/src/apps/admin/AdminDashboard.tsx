@@ -126,7 +126,7 @@ export const AdminDashboard = () => {
                                         {app.extracted_data?.academic?.gpa || 'N/A'}
                                     </td>
                                     <td className="px-8 py-6 text-[#0066FF] font-black text-sm">
-                                        {app.eligibility_result?.score || '--'}
+                                        {app.eligibility_score || '--'}
                                     </td>
                                     <td className="px-8 py-6">
                                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${

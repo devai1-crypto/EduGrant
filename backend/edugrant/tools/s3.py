@@ -2,9 +2,18 @@ import boto3
 from ..config import settings
 
 def get_s3_client():
+    if not settings.R2_ACCOUNT_ID:
+        # Local development with Minio
+        return boto3.client(
+            's3',
+            endpoint_url="http://localhost:9000",
+            aws_access_key_id=settings.R2_ACCESS_KEY_ID or "r2_access_key",
+            aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY or "r2_secret_key",
+            region_name="us-east-1" # Minio default
+        )
     return boto3.client(
         's3',
-        endpoint_url=f"https://{settings.R2_ACCOUNT_ID}.r2.cloudflarestorage.com" if settings.R2_ACCOUNT_ID else None,
+        endpoint_url=f"https://{settings.R2_ACCOUNT_ID}.r2.cloudflarestorage.com",
         aws_access_key_id=settings.R2_ACCESS_KEY_ID,
         aws_secret_access_key=settings.R2_SECRET_ACCESS_KEY,
     )

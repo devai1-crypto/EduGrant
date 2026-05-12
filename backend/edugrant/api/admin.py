@@ -8,6 +8,7 @@ from ..state.db import get_db, Application, Decision, AgentRun, AgentEvent, Atta
 from ..state.schemas import AdminApplicationSummary
 from ..orchestrator.checkpointer import graph
 from .deps import verify_admin_token
+from ..tools.s3 import get_presigned_url
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(verify_admin_token)])
 
@@ -36,10 +37,18 @@ async def get_admin_queue(db: AsyncSession = Depends(get_db)):
         )
         latest_run = run_result.scalar_one_or_none()
         
+        # Get state from LangGraph
+        state = None
+        if latest_run:
+            config = {"configurable": {"thread_id": str(app.application_id)}}
+            state = await graph.aget_state(config)
+            
+        extracted_data = state.values.get("extracted_data") if state and state.values else {}
+        
         summaries.append({
             "application_id": str(app.application_id),
-            "student_name": app.raw_payload.get("fullName", "Unknown"),
-            "gpa": float(app.raw_payload.get("gpa", 0.0)),
+            "student_name": extracted_data.get("student_info", {}).get("full_name") or app.raw_payload.get("fullName") or "Unknown",
+            "gpa": float(extracted_data.get("transcript_info", {}).get("gpa") or app.raw_payload.get("gpa") or 0.0),
             "status": app.status,
             "latest_run_id": str(latest_run.run_id) if latest_run else None,
             "eligibility_score": latest_dec.eligibility_score if latest_dec else None,
@@ -49,10 +58,21 @@ async def get_admin_queue(db: AsyncSession = Depends(get_db)):
 
 @router.get("/applications/{id}")
 async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    # Force UUID type check
+    if not isinstance(id, uuid.UUID):
+        try:
+            id = uuid.UUID(str(id))
+        except:
+            raise HTTPException(status_code=400, detail="Invalid UUID format")
+
     result = await db.execute(select(Application).where(Application.application_id == id))
     db_app = result.scalar_one_or_none()
+    
     if not db_app:
-        raise HTTPException(status_code=404, detail="Application not found")
+        # Debugging: check if any app exists
+        all_apps = await db.execute(select(Application.application_id))
+        print(f"DEBUG: Looking for {id}. Available IDs: {[str(a) for a in all_apps.scalars().all()]}")
+        raise HTTPException(status_code=404, detail=f"Application {id} not found in database")
         
     # Get all events for audit trail
     events_result = await db.execute(
@@ -63,9 +83,17 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
     )
     events = events_result.scalars().all()
     
-    # Get attachments
+    # Get attachments with presigned URLs
     att_result = await db.execute(select(Attachment).where(Attachment.application_id == id))
-    attachments = att_result.scalars().all()
+    db_attachments = att_result.scalars().all()
+    attachments = []
+    for att in db_attachments:
+        attachments.append({
+            "id": str(att.attachment_id),
+            "filename": att.original_filename,
+            "s3_key": att.s3_key,
+            "presigned_url": get_presigned_url(att.s3_key)
+        })
     
     # Get current state from LangGraph
     config = {"configurable": {"thread_id": str(id)}}

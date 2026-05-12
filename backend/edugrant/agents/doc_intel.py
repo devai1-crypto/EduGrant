@@ -52,7 +52,11 @@ async def run(state: EduGrantState):
         all_text += f"\n--- Document: {att['filename']} ---\n{text}\n"
 
     # Extraction with structured output
-    llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(ExtractedData)
+    llm = ChatOpenAI(
+        model="gpt-4o", 
+        temperature=0,
+        api_key=settings.OPENAI_API_KEY
+    ).with_structured_output(ExtractedData)
     
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are the Document Intelligence Agent. Extract structured information from the provided text or images. "

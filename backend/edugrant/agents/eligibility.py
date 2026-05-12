@@ -33,7 +33,11 @@ async def run(state: EduGrantState):
             )
         }
 
-    llm = ChatOpenAI(model="gpt-4o", temperature=0).with_structured_output(EligibilityResult)
+    llm = ChatOpenAI(
+        model="gpt-4o", 
+        temperature=0,
+        api_key=settings.OPENAI_API_KEY
+    ).with_structured_output(EligibilityResult)
     
     # Load rubric based on scholarship type
     scholarship_type = state.get("scholarship_type", "merit_undergrad")
