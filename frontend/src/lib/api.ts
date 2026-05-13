@@ -7,7 +7,20 @@ const getAuthHeaders = () => {
 
 export const api = {
   // Student Applications
+  uploadFile: async (file: File) => {
+
+    const formData = new FormData();
+    formData.append('file', file);
+    const response = await fetch(`${API_BASE_URL}/upload`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!response.ok) throw new Error('Failed to upload file');
+    return response.json();
+  },
+
   submitApplication: async (payload: { scholarship_type: string; form_data: any; attachments: string[] }) => {
+
     const response = await fetch(`${API_BASE_URL}/applications`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

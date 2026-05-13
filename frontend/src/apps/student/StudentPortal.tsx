@@ -31,17 +31,20 @@ export const StudentPortal = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, we would upload files to S3/R2 first and get keys
-      // For this MVP, we'll simulate the S3 keys
-      const attachments = Object.entries(files)
-        .filter(([_, file]) => file !== null)
-        .map(([id, file]) => `uploads/${id}_${file?.name}`);
+      // Actually upload files to S3/Minio via the backend
+      const uploadPromises = Object.values(files)
+        .filter((file): file is File => file !== null)
+        .map(file => api.uploadFile(file));
+      
+      const uploadedFiles = await Promise.all(uploadPromises);
+      const attachments = uploadedFiles.map(res => res.s3_key);
 
       const response = await api.submitApplication({
         scholarship_type: 'merit_undergrad',
         form_data: formData,
         attachments: attachments
       });
+
 
       // Redirect to status page with the new run_id
       navigate(`/status/${response.run_id}?appId=${response.application_id}`);
