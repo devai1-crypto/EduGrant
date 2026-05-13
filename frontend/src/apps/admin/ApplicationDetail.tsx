@@ -365,10 +365,16 @@ export const ApplicationDetail = () => {
                         </div>
                         <div>
                             <span className="block text-[8px] font-black uppercase text-white/40 mb-2">Reasoning Chain</span>
-                            <p className="text-xs leading-relaxed text-white/60">
-                                {app.eligibility_result?.reasoning_chain || 'The AI agents are currently evaluating this application based on merit and financial need metrics.'}
-                            </p>
+                            <div className="text-[11px] leading-relaxed text-white/60 whitespace-pre-wrap font-medium">
+                                {(app.eligibility_result?.reasoning_chain || 'The AI agents are currently evaluating this application based on merit and financial need metrics.')
+                                    .split(/(?=\d\.\s|Total Score:|Recommendation:)/)
+                                    .map((part: string, i: number) => (
+                                        <p key={i} className={i > 0 ? "mt-4" : ""}>{part.trim()}</p>
+                                    ))
+                                }
+                            </div>
                         </div>
+
                     </div>
                 </section>
 
