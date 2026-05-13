@@ -4,23 +4,23 @@ from typing import Optional, List, Literal, Annotated
 from decimal import Decimal
 
 class StudentInfo(BaseModel):
-    full_name: str
-    email: EmailStr
-    date_of_birth: date
-    nationality: str
+    full_name: Optional[str] = None
+    email: Optional[EmailStr] = None
+    date_of_birth: Optional[date] = None
+    nationality: Optional[str] = None
     student_id: Optional[str] = None
 
 class TranscriptInfo(BaseModel):
-    institution: str
-    gpa: Decimal = Field(..., ge=0, le=4, description="On 4.0 scale")
-    courses_completed: int
-    confidence: float = Field(..., ge=0, le=1)
+    institution: Optional[str] = None
+    gpa: Optional[Decimal] = Field(None, ge=0, le=4, description="On 4.0 scale")
+    courses_completed: Optional[int] = None
+    confidence: float = Field(0, ge=0, le=1)
 
 class IncomeProofInfo(BaseModel):
-    annual_income: Decimal
+    annual_income: Optional[Decimal] = None
     currency: str = "USD"
     employer: Optional[str] = None
-    confidence: float = Field(..., ge=0, le=1)
+    confidence: float = Field(0, ge=0, le=1)
 
 class ExtractedData(BaseModel):
     student_info: Optional[StudentInfo] = None

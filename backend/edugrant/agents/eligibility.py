@@ -52,12 +52,23 @@ async def run(state: EduGrantState):
     
     chain = prompt | llm
     
+    extracted_data = state.get("extracted_data")
+    data_to_send = {}
+    if extracted_data:
+        if hasattr(extracted_data, "model_dump"):
+            data_to_send = extracted_data.model_dump()
+        elif hasattr(extracted_data, "dict"):
+            data_to_send = extracted_data.dict()
+        else:
+            data_to_send = extracted_data
+
     result = await chain.ainvoke({
-        "data": state.get("extracted_data"),
+        "data": json.dumps(data_to_send, indent=2, default=str),
         "rubric": json.dumps(rubric, indent=2) if rubric else "No rubric found."
     })
     
     return {
+
         "eligibility_result": result
     }
 

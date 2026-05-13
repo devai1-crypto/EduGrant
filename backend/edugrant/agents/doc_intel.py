@@ -9,7 +9,9 @@ from typing import List, Optional
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from ..state.graph_state import EduGrantState
+from decimal import Decimal
 from ..state.schemas import ExtractedData, StudentInfo, TranscriptInfo, IncomeProofInfo
+
 from ..config import settings
 from ..tools.s3 import get_presigned_url
 from ..tools.audit import audit_event
@@ -80,6 +82,11 @@ async def run(state: EduGrantState):
     try:
         result = await chain.ainvoke({"text": all_text})
         
+        # Ensure objects exist even if LLM skipped them
+        if not result.student_info: result.student_info = StudentInfo()
+        if not result.transcript_info: result.transcript_info = TranscriptInfo()
+        if not result.income_proof: result.income_proof = IncomeProofInfo()
+        
         # --- SAFETY NET / FALLBACK ---
         # If the LLM failed to find data in the PDFs, we look at the raw_payload (what the student typed)
         # to ensure we have enough to proceed to Scoring.
@@ -87,17 +94,21 @@ async def run(state: EduGrantState):
         
         if not result.student_info.full_name:
             result.student_info.full_name = raw.get("full_name") or raw.get("fullName")
+            
         if not result.transcript_info.institution:
             result.transcript_info.institution = raw.get("institution")
+            
         if not result.transcript_info.gpa:
             try:
-                result.transcript_info.gpa = float(raw.get("gpa", 0))
+                gpa_val = raw.get("gpa")
+                if gpa_val: result.transcript_info.gpa = Decimal(str(gpa_val))
             except: pass
 
-        # Clean up missing_fields: if we found it in raw_payload, it's no longer "critically missing"
+        # Clean up missing_fields: For scoring to happen, we only REALLY need a GPA.
+        # If we have a GPA (either from PDF or Form), we proceed.
         updated_missing = []
-        if not result.student_info.full_name: updated_missing.append("full_name")
-        if not result.transcript_info.gpa: updated_missing.append("gpa")
+        if not result.transcript_info.gpa:
+            updated_missing.append("gpa")
         
         return {
             "extracted_data": result,
@@ -106,8 +117,10 @@ async def run(state: EduGrantState):
         }
     except Exception as e:
         print(f"Doc Intel Error: {e}")
+        import traceback
+        traceback.print_exc()
         return {
-            "extracted_data": None,
+            "extracted_data": ExtractedData(student_info=StudentInfo(), transcript_info=TranscriptInfo()),
             "missing_fields": ["extraction_failed"],
             "document_quality_flags": ["error"]
         }

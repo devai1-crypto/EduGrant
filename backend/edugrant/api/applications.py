@@ -41,8 +41,12 @@ async def run_orchestrator(application_id: str, run_id: str, resume: bool = Fals
                     "run_id": run_id,
                     "raw_payload": db_app.raw_payload if db_app else {},
                     "attachment_manifest": manifest,
-                    "audit_trail": [{"event": "start", "timestamp": "now"}]
+                    "audit_trail": [{"event": "start", "timestamp": "now"}],
+                    "eligibility_result": None,
+                    "extracted_data": None,
+                    "missing_fields": []
                 }
+
                 await graph.ainvoke(initial_state, config=config)
     except Exception as e:
         print(f"Orchestrator Error: {e}")

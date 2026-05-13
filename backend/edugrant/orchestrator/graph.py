@@ -13,12 +13,25 @@ async def decision_node(state: EduGrantState):
     """
     print("---DECISION---")
     final_dec = "review"
-    if state.get("eligibility_result"):
-        rec = state["eligibility_result"].recommendation
+    elig_res = state.get("eligibility_result")
+    if elig_res:
+        # Handle both dict (from DB checkpoint) and object (from MemorySaver)
+        if isinstance(elig_res, dict):
+            rec = elig_res.get("recommendation")
+            score = elig_res.get("eligibility_score", 0)
+            reasoning = elig_res.get("reasoning_chain", "No reasoning.")
+        else:
+            rec = getattr(elig_res, "recommendation", None)
+            score = getattr(elig_res, "eligibility_score", 0)
+            reasoning = getattr(elig_res, "reasoning_chain", "No reasoning.")
+
         if rec == "auto_approve":
             final_dec = "approved"
         elif rec == "auto_reject":
             final_dec = "rejected"
+    else:
+        score = 0
+        reasoning = "No eligibility result."
             
     # Persist to DB
     async with async_session() as db:
@@ -34,10 +47,11 @@ async def decision_node(state: EduGrantState):
             application_id=state["application_id"],
             run_id=state["run_id"],
             final_decision=final_dec,
-            eligibility_score=state["eligibility_result"].eligibility_score if state.get("eligibility_result") else 0,
-            reasoning_text=state["eligibility_result"].reasoning_chain if state.get("eligibility_result") else "No eligibility result.",
+            eligibility_score=score,
+            reasoning_text=reasoning,
             decided_by="agent"
         )
+
         db.add(db_decision)
         
         # Update AgentRun status

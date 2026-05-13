@@ -60,14 +60,20 @@ export const ApplicationDetail = () => {
   ];
 
   const getNodeStatus = (nodeId: string) => {
-    const isCompleted = app?.audit_trail?.some((e: any) => e.node_name === nodeId && e.event_type === 'end');
-    const lastStart = [...(app?.audit_trail || [])].reverse().find((e: any) => e.event_type === 'start');
-    const isActive = lastStart?.node_name === nodeId && !app?.audit_trail?.some((e: any) => e.node_name === nodeId && e.event_type === 'end');
+    const currentRunId = app?.current_state?.run_id;
+    if (!currentRunId) return 'WAIT';
+
+    const runEvents = app?.audit_trail?.filter((e: any) => e.run_id === currentRunId) || [];
+    
+    const isCompleted = runEvents.some((e: any) => e.node_name === nodeId && e.event_type === 'end');
+    const lastStart = [...runEvents].reverse().find((e: any) => e.event_type === 'start');
+    const isActive = lastStart?.node_name === nodeId && !runEvents.some((e: any) => e.node_name === nodeId && e.event_type === 'end');
     
     if (isCompleted) return 'OK';
     if (isActive) return 'ACTIVE';
     return 'WAIT';
   };
+
 
   if (loading) return <PageWrapper><div className="pt-32 text-center font-black uppercase text-xs text-gray-400">Loading details...</div></PageWrapper>;
   if (!app) return <PageWrapper><div className="pt-32 text-center font-black uppercase text-xs text-gray-400">Application not found</div></PageWrapper>;
@@ -414,7 +420,8 @@ export const ApplicationDetail = () => {
                                 {(app.audit_trail?.length ?? 0) === 0 && (
                                     <p className="text-[9px] text-white/20 italic">No events yet.</p>
                                 )}
-                                {app.audit_trail?.map((log: any, i: number) => (
+                                {app.audit_trail?.filter((e: any) => !app.current_state?.run_id || e.run_id === app.current_state.run_id).map((log: any, i: number) => (
+
                                     <div key={i} className="flex gap-3">
                                         <span className="text-[8px] font-mono text-white/20 shrink-0 pt-0.5">{new Date(log.created_at).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit', second:'2-digit'})}</span>
                                         <div>
