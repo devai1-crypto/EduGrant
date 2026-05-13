@@ -302,22 +302,52 @@ export const ApplicationDetail = () => {
                 {/* Attachments */}
                 <section className="bg-white rounded-[2.5rem] border border-gray-100 p-10 shadow-sm">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-6">Verified Vault</h3>
-                    <div className="grid grid-cols-1 gap-4">
-                        {app.attachments?.map((at: any, i: number) => (
-                            <div 
-                                key={i} 
-                                onClick={() => window.open(at.presigned_url, '_blank')}
-                                className="flex items-center justify-between p-5 bg-[#FAFAFA] rounded-2xl border border-gray-100 hover:border-[#0066FF] transition-all group cursor-pointer"
-                            >
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-gray-300 group-hover:text-[#0066FF] transition-all">
-                                        <FileText className="w-5 h-5" />
-                                    </div>
-                                    <span className="text-[10px] font-black uppercase tracking-widest text-[#001F3F]">{at.filename}</span>
-                                </div>
-                                <CheckCircle2 className="text-green-500 w-4 h-4" />
+                    
+                    {app.extracted_data?.document_quality_flags?.length > 0 && (
+                        <div className="mb-6 p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-start gap-4">
+                            <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0" />
+                            <div>
+                                <h4 className="text-[10px] font-black uppercase text-amber-900 tracking-widest mb-1">AI Quality Alert</h4>
+                                {app.extracted_data.document_quality_flags.map((flag: string, i: number) => (
+                                    <p key={i} className="text-[11px] text-amber-800/80">{flag}</p>
+                                ))}
                             </div>
-                        ))}
+                        </div>
+                    )}
+
+                    <div className="grid grid-cols-1 gap-4">
+
+                        {app.attachments?.map((at: any, i: number) => {
+                            const quality = app.extracted_data?.attachment_qualities?.find((q: any) => q.filename === at.filename);
+                            const isValid = quality ? quality.is_valid : true;
+                            
+                            return (
+                                <div 
+                                    key={i} 
+                                    onClick={() => window.open(at.presigned_url, '_blank')}
+                                    className={`flex items-center justify-between p-5 ${isValid ? 'bg-[#FAFAFA]' : 'bg-red-50/50'} rounded-2xl border ${isValid ? 'border-gray-100' : 'border-red-100'} hover:border-[#0066FF] transition-all group cursor-pointer relative overflow-hidden`}
+                                >
+                                    {!isValid && <div className="absolute top-0 left-0 w-1 h-full bg-red-400" />}
+                                    <div className="flex items-center gap-4">
+                                        <div className={`w-10 h-10 bg-white rounded-xl flex items-center justify-center ${isValid ? 'text-gray-300' : 'text-red-300'} group-hover:text-[#0066FF] transition-all`}>
+                                            <FileText className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] font-black uppercase tracking-widest text-[#001F3F] block">{at.filename}</span>
+                                            {quality?.reason && (
+                                                <span className="text-[8px] font-bold text-red-500 uppercase tracking-tighter mt-1 block">AI Alert: {quality.reason}</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {isValid ? (
+                                        <CheckCircle2 className="text-green-500 w-4 h-4" />
+                                    ) : (
+                                        <ShieldAlert className="text-red-500 w-4 h-4" />
+                                    )}
+                                </div>
+                            );
+                        })}
+
                         {(!app.attachments || app.attachments.length === 0) && (
                             <div className="text-[10px] text-gray-400 uppercase font-black tracking-widest">No documents uploaded.</div>
                         )}
@@ -367,12 +397,22 @@ export const ApplicationDetail = () => {
                             <span className="block text-[8px] font-black uppercase text-white/40 mb-2">Reasoning Chain</span>
                             <div className="text-[11px] leading-relaxed text-white/60 whitespace-pre-wrap font-medium">
                                 {(app.eligibility_result?.reasoning_chain || 'The AI agents are currently evaluating this application based on merit and financial need metrics.')
-                                    .split(/(?=\d\.\s|Total Score:|Recommendation:)/)
-                                    .map((part: string, i: number) => (
-                                        <p key={i} className={i > 0 ? "mt-4" : ""}>{part.trim()}</p>
-                                    ))
+                                    .split('\n')
+                                    .map((line: string, i: number) => {
+                                        if (line.startsWith('###')) {
+                                            return <h4 key={i} className="text-white font-black uppercase text-[9px] tracking-widest mt-6 mb-2 border-b border-white/5 pb-1">{line.replace(/###\s?/, '')}</h4>
+                                        }
+                                        if (line.trim().startsWith('-') || line.trim().startsWith('*')) {
+                                            return <div key={i} className="flex gap-2 mt-1">
+                                                <span className="text-[#0066FF]">•</span>
+                                                <span>{line.trim().substring(1).trim()}</span>
+                                            </div>
+                                        }
+                                        return <p key={i} className={line.trim() ? "mt-1" : "h-2"}>{line}</p>
+                                    })
                                 }
                             </div>
+
                         </div>
 
                     </div>

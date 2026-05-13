@@ -22,11 +22,20 @@ class IncomeProofInfo(BaseModel):
     employer: Optional[str] = None
     confidence: float = Field(0, ge=0, le=1)
 
+class AttachmentQuality(BaseModel):
+    filename: str
+    is_valid: bool
+    reason: Optional[str] = None
+
 class ExtractedData(BaseModel):
     student_info: Optional[StudentInfo] = None
     transcript_info: Optional[TranscriptInfo] = None
     income_proof: Optional[IncomeProofInfo] = None
     missing_critical_fields: List[str] = []
+    document_quality_flags: List[str] = []
+    attachment_qualities: List[AttachmentQuality] = []
+
+
 
 class EligibilityResult(BaseModel):
     eligibility_score: int = Field(..., ge=0, le=100)

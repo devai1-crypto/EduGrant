@@ -46,7 +46,12 @@ async def run(state: EduGrantState):
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are the Eligibility Scoring Agent for EduGrant AI. Evaluate the student's extracted data against the provided institutional rubric. "
                    "Provide a score from 0-100 and a recommendation (auto_approve, auto_reject, human_review). "
-                   "Include your reasoning chain clearly mapping criteria to scores. Use bullet points and clear section headers (e.g., '### Academic Excellence') for readability."),
+                   "Include your reasoning chain clearly mapping criteria to scores. "
+                   "CRITICAL: Check 'attachment_qualities' in the data. If documents are invalid, random, or missing, "
+                   "you MUST penalize that category score (usually to 0) or apply a significant 'Trust Penalty' to the final sum. "
+                   "The 'eligibility_score' MUST be the EXACT mathematical result of your reasoning chain calculation. No mismatches."),
+
+
 
         ("user", "Extracted Data: {data}\n\nInstitutional Rubric:\n{rubric}")
     ])

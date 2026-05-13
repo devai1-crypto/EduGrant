@@ -22,6 +22,8 @@ class EduGrantState(TypedDict):
     extracted_data: Optional[ExtractedData]
     missing_fields: List[str]
     document_quality_flags: List[str]
+    attachment_qualities: List[dict]
+
     
     # Outreach outputs
     outreach_draft: Optional[OutreachDraft]

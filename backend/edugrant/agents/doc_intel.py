@@ -4,6 +4,9 @@ try:
 except ImportError:
     fitz = None
 import urllib.request
+import docx
+from ..tools.s3 import download_file
+
 import tempfile
 from typing import List, Optional
 from langchain_openai import ChatOpenAI
@@ -16,27 +19,38 @@ from ..config import settings
 from ..tools.s3 import get_presigned_url
 from ..tools.audit import audit_event
 
-async def extract_text_pymupdf(url: str) -> str:
+async def extract_text_from_file(s3_key: str, filename: str) -> str:
     """
-    Downloads the PDF from the presigned URL and extracts text using PyMuPDF.
+    Downloads and extracts text based on file extension.
     """
-    if fitz is None:
-        print("WARNING: PyMuPDF (fitz) not installed. Falling back to self-reported data.")
-        return ""
-        
-    try:
-        with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-            urllib.request.urlretrieve(url, tmp.name)
-            doc = fitz.open(tmp.name)
-            text = ""
-            for page in doc:
-                text += page.get_text()
-            doc.close()
-            os.unlink(tmp.name)
-            return text
-    except Exception as e:
-        print(f"Extraction Error: {e}")
-        return ""
+    suffix = ".pdf" if filename.lower().endswith(".pdf") else ".docx" if filename.lower().endswith(".docx") else ".txt"
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        try:
+            print(f"Downloading {s3_key} to {tmp.name}")
+            download_file(s3_key, tmp.name)
+            
+            if suffix == ".pdf":
+                if fitz is None: return ""
+                doc = fitz.open(tmp.name)
+                text = ""
+                for page in doc:
+                    text += page.get_text()
+                doc.close()
+                return text
+            elif suffix == ".docx":
+                doc = docx.Document(tmp.name)
+                return "\n".join([p.text for p in doc.paragraphs])
+            else:
+                with open(tmp.name, 'r', encoding='utf-8', errors='ignore') as f:
+                    return f.read()
+        except Exception as e:
+            print(f"Error extracting text from {filename}: {e}")
+            return ""
+        finally:
+            if os.path.exists(tmp.name):
+                os.remove(tmp.name)
+
 
 @audit_event("doc_intel")
 async def run(state: EduGrantState):
@@ -59,9 +73,9 @@ async def run(state: EduGrantState):
     all_text = ""
     attachments = state.get("attachment_manifest", [])
     for att in attachments:
-        url = get_presigned_url(att["s3_key"])
-        text = await extract_text_pymupdf(url)
+        text = await extract_text_from_file(att["s3_key"], att["filename"])
         all_text += f"\n--- Document: {att['filename']} ---\n{text}\n"
+
 
     # Extraction with structured output
     llm = ChatOpenAI(
@@ -73,8 +87,12 @@ async def run(state: EduGrantState):
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are the Document Intelligence Agent. Extract structured information from the provided text. "
                    "If you cannot find specific fields in the text, leave them blank but DO NOT invent data. "
-                   "List any missing critical fields in missing_critical_fields."),
+                   "List any missing critical fields in missing_critical_fields. "
+                   "IMPORTANT: Evaluate each document in 'attachment_qualities'. For each file, determine if it is "
+                   "actually what it claims to be (e.g. is 'transcript.pdf' a real transcript?). "
+                   "Provide a boolean 'is_valid' and a brief 'reason' for each file."),
         ("user", "Extracted Text Content:\n{text}\n\nSchema Requirement: ExtractedData model.")
+
     ])
     
     chain = prompt | llm
@@ -86,6 +104,8 @@ async def run(state: EduGrantState):
         if not result.student_info: result.student_info = StudentInfo()
         if not result.transcript_info: result.transcript_info = TranscriptInfo()
         if not result.income_proof: result.income_proof = IncomeProofInfo()
+        if not hasattr(result, 'document_quality_flags') or not result.document_quality_flags: 
+            result.document_quality_flags = []
         
         # --- SAFETY NET / FALLBACK ---
         # If the LLM failed to find data in the PDFs, we look at the raw_payload (what the student typed)
@@ -114,13 +134,19 @@ async def run(state: EduGrantState):
         # Clean up missing_fields: For scoring to happen, we only REALLY need a GPA.
         # If we have a GPA (either from PDF or Form), we proceed.
         updated_missing = []
+        if not hasattr(result, 'document_quality_flags') or not result.document_quality_flags: 
+            result.document_quality_flags = []
+        if not hasattr(result, 'attachment_qualities') or not result.attachment_qualities:
+            result.attachment_qualities = []
+        
         if not result.transcript_info.gpa:
             updated_missing.append("gpa")
         
         return {
             "extracted_data": result,
             "missing_fields": updated_missing,
-            "document_quality_flags": []
+            "document_quality_flags": result.document_quality_flags,
+            "attachment_qualities": result.attachment_qualities
         }
     except Exception as e:
         print(f"Doc Intel Error: {e}")
