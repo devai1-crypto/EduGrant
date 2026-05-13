@@ -383,7 +383,12 @@ export const ApplicationDetail = () => {
                         </div>
                     </div>
                     <div className="flex items-baseline gap-2 mb-8">
-                        <span className="text-6xl font-serif text-[#0066FF]">{app.eligibility_result?.eligibility_score || '--'}</span>
+                        <span className="text-6xl font-serif text-[#0066FF]">
+                            {app.eligibility_result?.eligibility_score !== undefined && app.eligibility_result?.eligibility_score !== null 
+                                ? app.eligibility_result.eligibility_score 
+                                : '--'}
+                        </span>
+
                         <span className="text-xs font-black uppercase tracking-widest text-white/40">/ 100</span>
                     </div>
                     <div className="space-y-6">

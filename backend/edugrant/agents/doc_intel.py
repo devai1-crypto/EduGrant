@@ -26,33 +26,37 @@ async def extract_text_from_file(s3_key: str, filename: str) -> str:
     suffix = ".pdf" if filename.lower().endswith(".pdf") else ".docx" if filename.lower().endswith(".docx") else ".txt"
     
     with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
+        tmp_name = tmp.name
+        tmp.close() # Close handle immediately to avoid WinError 32
+        
         try:
-            print(f"Downloading {s3_key} to {tmp.name}")
-            download_file(s3_key, tmp.name)
+            print(f"Downloading {s3_key} to {tmp_name}")
+            download_file(s3_key, tmp_name)
             
             if suffix == ".pdf":
                 if fitz is None: return ""
-                doc = fitz.open(tmp.name)
+                doc = fitz.open(tmp_name)
                 text = ""
                 for page in doc:
                     text += page.get_text()
                 doc.close()
                 return text
             elif suffix == ".docx":
-                doc = docx.Document(tmp.name)
+                doc = docx.Document(tmp_name)
                 return "\n".join([p.text for p in doc.paragraphs])
             else:
-                with open(tmp.name, 'r', encoding='utf-8', errors='ignore') as f:
+                with open(tmp_name, 'r', encoding='utf-8', errors='ignore') as f:
                     return f.read()
         except Exception as e:
             print(f"Error extracting text from {filename}: {e}")
             return ""
         finally:
-            if os.path.exists(tmp.name):
-                os.remove(tmp.name)
+            if os.path.exists(tmp_name):
+                os.remove(tmp_name)
 
 
 @audit_event("doc_intel")
+
 async def run(state: EduGrantState):
     """
     Reads PDFs attached to the application and extracts structured data.
