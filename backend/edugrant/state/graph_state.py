@@ -8,6 +8,9 @@ class EduGrantState(TypedDict):
     # Identity
     application_id: str
     run_id: str
+    raw_payload: dict
+    attachment_manifest: List[dict]
+
     
     # Triage outputs
     scholarship_type: Literal["merit_undergrad"]

@@ -104,6 +104,13 @@ async def run(state: EduGrantState):
                 if gpa_val: result.transcript_info.gpa = Decimal(str(gpa_val))
             except: pass
 
+        if not result.income_proof.annual_income:
+            try:
+                income_val = raw.get("annual_income") or raw.get("annualIncome") or raw.get("income")
+                if income_val: result.income_proof.annual_income = Decimal(str(income_val))
+            except: pass
+
+
         # Clean up missing_fields: For scoring to happen, we only REALLY need a GPA.
         # If we have a GPA (either from PDF or Form), we proceed.
         updated_missing = []
