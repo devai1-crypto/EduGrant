@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Filter, Activity, ArrowUpRight, BarChart3, PieChart as PieChartIcon, Trash2 } from 'lucide-react';
+import { Filter, Activity, ArrowUpRight, BarChart3, PieChart as PieChartIcon, Trash2, Settings } from 'lucide-react';
 
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { PageWrapper } from '../../components/PageWrapper';
@@ -53,9 +53,14 @@ export const AdminDashboard = () => {
                 <h1 className="text-serif text-4xl text-[#001F3F]">Application Queue</h1>
                 <p className="text-xs font-black text-gray-400 uppercase tracking-widest mt-1">Manage institutional funding requests</p>
              </div>
-             <button className="bg-white border border-gray-100 p-2.5 rounded-xl text-[#001F3F] hover:bg-gray-50 transition-all cursor-pointer">
-                <Filter className="w-5 h-5" />
-             </button>
+              <div className="flex gap-4">
+                 <Link to="/admin/criteria" className="bg-white border border-gray-100 px-6 py-2.5 rounded-xl text-[#001F3F] text-[10px] font-black uppercase tracking-widest hover:bg-gray-50 transition-all flex items-center gap-2">
+                    <Settings className="w-4 h-4" /> Criteria
+                 </Link>
+                 <button className="bg-white border border-gray-100 p-2.5 rounded-xl text-[#001F3F] hover:bg-gray-50 transition-all cursor-pointer">
+                    <Filter className="w-5 h-5" />
+                 </button>
+              </div>
           </header>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">

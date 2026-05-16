@@ -135,5 +135,26 @@ export const api = {
       headers: { 'Authorization': `Bearer ${password}` }
     });
     return response.ok;
+  },
+
+  getRubric: async () => {
+    const response = await fetch(`${API_BASE_URL}/admin/settings/rubric`, {
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to fetch rubric');
+    return response.json();
+  },
+
+  updateRubric: async (rubric: any) => {
+    const response = await fetch(`${API_BASE_URL}/admin/settings/rubric`, {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        ...getAuthHeaders()
+      },
+      body: JSON.stringify(rubric),
+    });
+    if (!response.ok) throw new Error('Failed to update rubric');
+    return response.json();
   }
 };

@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, update
 from typing import List
 
-from ..state.db import get_db, Application, Decision, AgentRun, AgentEvent, Attachment
+from ..state.db import get_db, Application, Decision, AgentRun, AgentEvent, Attachment, Institution
 from ..state.schemas import AdminApplicationSummary
 from ..orchestrator.checkpointer import graph
 from .deps import verify_admin_token
@@ -154,15 +154,24 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
                 "recommendation": latest_decision.final_decision
             }
 
-    return {
-        "application": db_app,
-        "attachments": attachments,
-        "extracted_data": extracted_data,
-        "eligibility_result": eligibility_result,
-        "latest_decision": latest_decision,
-        "audit_trail": events,
-        "current_state": state.values if state else None
-    }
+@router.post("/settings/rubric")
+async def update_rubric(rubric: dict, db: AsyncSession = Depends(get_db), institute_id: str = Depends(verify_admin_token)):
+    result = await db.execute(select(Institution).where(Institution.id == institute_id))
+    inst = result.scalar_one_or_none()
+    if not inst:
+        raise HTTPException(status_code=404, detail="Institution not found")
+    
+    inst.rubric = rubric
+    await db.commit()
+    return {"status": "success", "rubric": rubric}
+
+@router.get("/settings/rubric")
+async def get_rubric(db: AsyncSession = Depends(get_db), institute_id: str = Depends(verify_admin_token)):
+    result = await db.execute(select(Institution).where(Institution.id == institute_id))
+    inst = result.scalar_one_or_none()
+    if not inst:
+        raise HTTPException(status_code=404, detail="Institution not found")
+    return inst.rubric
 
 @router.post("/applications/{id}/override")
 async def override_decision(id: uuid.UUID, payload: dict, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):

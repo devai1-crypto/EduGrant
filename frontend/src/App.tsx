@@ -11,6 +11,7 @@ import { StudentPortal } from './apps/student/StudentPortal';
 import { StatusPage } from './apps/student/StatusPage';
 import { AdminDashboard } from './apps/admin/AdminDashboard';
 import { ApplicationDetail } from './apps/admin/ApplicationDetail';
+import { RubricSettings } from './apps/admin/RubricSettings';
 import { AdminLogin } from './apps/admin/AdminLogin';
 import { TraceUI } from './apps/trace/TraceUI';
 import { api } from './lib/api';
@@ -55,6 +56,10 @@ function AppContent() {
           <Route 
             path="/admin/applications/:id" 
             element={isAdmin ? <ApplicationDetail /> : <Navigate to="/admin" />} 
+          />
+          <Route 
+            path="/admin/criteria" 
+            element={isAdmin ? <RubricSettings /> : <Navigate to="/admin" />} 
           />
           <Route 
             path="/trace/:runId" 
