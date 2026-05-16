@@ -19,13 +19,13 @@ async def send_application_confirmation(email: str, application_id: str):
     short_id = str(application_id)[:8].upper()
     
     payload = {
-        "sender": {"name": "EduGrant AI", "email": "admissions@edugrant.ai"},
+        "sender": {"name": "EduGrant AI", "email": settings.EMAIL_SENDER},
         "to": [{"email": email}],
         "subject": f"Application Received: {short_id}",
         "htmlContent": f"""
             <html>
                 <body style="font-family: sans-serif; line-height: 1.6; color: #001F3F;">
-                    <div style="max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; rounded: 20px;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px;">
                         <h1 style="color: #0066FF;">Excellence Received.</h1>
                         <p>Hello,</p>
                         <p>Your scholarship application has been successfully submitted to the EduGrant AI intelligence pipeline.</p>
@@ -55,6 +55,64 @@ async def send_application_confirmation(email: str, application_id: str):
             print(f"Email error: {e}")
             return False
 
+async def send_decision_email(email: str, application_id: str, decision: str, score: float, reasoning: str):
+    """
+    Sends a decision email (Approval/Denial) to the student.
+    """
+    if not settings.BREVO_API_KEY or settings.BREVO_API_KEY.startswith("xkeysib-..."):
+        print(f"Skipping decision email to {email} - Brevo API key not configured.")
+        return False
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": settings.BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+
+    is_approved = decision.lower() == "approved"
+    status_color = "#28a745" if is_approved else "#dc3545"
+    status_text = "Approved" if is_approved else "Declined"
+    subject = f"Application Decision: {status_text} - {str(application_id)[:8].upper()}"
+
+    html_content = f"""
+    <html>
+        <body style="font-family: sans-serif; line-height: 1.6; color: #001F3F;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px;">
+                <h1 style="color: {status_color};">{status_text}.</h1>
+                <p>Hello,</p>
+                <p>A final decision has been made regarding your scholarship application <strong>{str(application_id)[:8].upper()}</strong>.</p>
+                
+                <div style="background: #f8f9fa; padding: 25px; border-radius: 12px; margin: 24px 0; border-left: 4px solid {status_color};">
+                    <p style="margin: 0; font-size: 12px; color: #666; text-transform: uppercase; letter-spacing: 2px;">AI Merit Score</p>
+                    <h2 style="margin: 8px 0; color: {status_color}; font-size: 32px;">{score}/100</h2>
+                    <p style="margin: 16px 0 0 0; font-size: 14px; color: #333;"><strong>Decision Logic:</strong> {reasoning}</p>
+                </div>
+
+                {"<p>Congratulations! Our team will reach out to you shortly with the next steps for your grant disbursement.</p>" if is_approved else "<p>Thank you for your interest in EduGrant. While we cannot offer you a scholarship at this time, we encourage you to apply again in the next cycle.</p>"}
+                
+                <hr style="border: none; border-top: 1px solid #f0f0f0; margin: 30px 0;" />
+                <p style="font-size: 11px; color: #999;">This is an automated message from the EduGrant AI Decision Engine.</p>
+            </div>
+        </body>
+    </html>
+    """
+
+    payload = {
+        "sender": {"name": "EduGrant AI", "email": settings.EMAIL_SENDER},
+        "to": [{"email": email}],
+        "subject": subject,
+        "htmlContent": html_content
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(url, headers=headers, json=payload)
+            return response.status_code < 300
+        except Exception as e:
+            print(f"Decision email error: {e}")
+            return False
+
 async def send_outreach_email(email: str, subject: str, body: str):
     """
     Sends a generic outreach email using Brevo API.
@@ -71,13 +129,13 @@ async def send_outreach_email(email: str, subject: str, body: str):
     }
 
     payload = {
-        "sender": {"name": "EduGrant AI", "email": "admissions@edugrant.ai"},
+        "sender": {"name": "EduGrant AI", "email": settings.EMAIL_SENDER},
         "to": [{"email": email}],
         "subject": subject,
         "htmlContent": f"""
             <html>
                 <body style="font-family: sans-serif; line-height: 1.6; color: #001F3F;">
-                    <div style="max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; rounded: 20px;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; border-radius: 20px;">
                         {body}
                         <hr style="border: none; border-top: 1px solid #f0f0f0; margin: 30px 0;" />
                         <p style="font-size: 11px; color: #999;">This is an automated message from the EduGrant AI Admissions System.</p>

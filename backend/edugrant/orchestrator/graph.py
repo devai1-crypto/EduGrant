@@ -1,7 +1,7 @@
 from langgraph.graph import StateGraph, END
 from langgraph.checkpoint.postgres import PostgresSaver
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import update
+from sqlalchemy import update, select
 
 from ..state.graph_state import EduGrantState
 from ..agents import triage, doc_intel, eligibility, outreach
@@ -35,6 +35,12 @@ async def decision_node(state: EduGrantState):
             
     # Persist to DB
     async with async_session() as db:
+        # Fetch student email
+        app_result = await db.execute(
+            select(Application.student_email).where(Application.application_id == state["application_id"])
+        )
+        student_email = app_result.scalar_one_or_none()
+
         # Update Application status
         await db.execute(
             update(Application)
@@ -62,6 +68,18 @@ async def decision_node(state: EduGrantState):
         )
         
         await db.commit()
+
+        # Send decision email if finalized
+        if final_dec in ["approved", "rejected"] and student_email:
+            from ..tools.email import send_decision_email
+            # Run in background or just await since we are in a node
+            await send_decision_email(
+                email=student_email,
+                application_id=state["application_id"],
+                decision=final_dec,
+                score=score,
+                reasoning=reasoning
+            )
 
     return {
         "final_decision": final_dec

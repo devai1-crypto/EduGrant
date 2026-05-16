@@ -139,12 +139,18 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
     }
 
 @router.post("/applications/{id}/override")
-async def override_decision(id: uuid.UUID, payload: dict, db: AsyncSession = Depends(get_db)):
+async def override_decision(id: uuid.UUID, payload: dict, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
     try:
         decision = payload.get("decision")
         reason = payload.get("reason", "Manual override")
         
         print(f"DEBUG: Overriding {id} to {decision} with reason: {reason}")
+
+        # Fetch application to get student email
+        res = await db.execute(select(Application).where(Application.application_id == id))
+        db_app = res.scalar_one_or_none()
+        if not db_app:
+            raise HTTPException(status_code=404, detail="Application not found")
 
         await db.execute(
             update(Application)
@@ -153,16 +159,29 @@ async def override_decision(id: uuid.UUID, payload: dict, db: AsyncSession = Dep
         )
         
         # Log the override decision
+        score = 100 if decision == 'approved' else 0
         db_decision = Decision(
             application_id=id,
             final_decision=decision,
             reasoning_text=reason,
             decided_by="admin",
-            eligibility_score=100 if decision == 'approved' else 0
+            eligibility_score=score
         )
         db.add(db_decision)
         await db.commit()
         
+        # Send email in background
+        if decision in ["approved", "rejected"]:
+            from ..tools.email import send_decision_email
+            background_tasks.add_task(
+                send_decision_email,
+                email=db_app.student_email,
+                application_id=id,
+                decision=decision,
+                score=score,
+                reasoning=reason
+            )
+
         return {"status": "overridden", "new_status": decision}
     except Exception as e:
         import traceback
@@ -173,6 +192,7 @@ async def override_decision(id: uuid.UUID, payload: dict, db: AsyncSession = Dep
 async def record_manual_decision(
     id: uuid.UUID,
     decision: dict, # { "final_decision": "approved", "reasoning_text": "..." }
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
     # Verify application exists
@@ -202,11 +222,24 @@ async def record_manual_decision(
     )
     
     # Update application status
-    db_app.status = decision.get("final_decision")
+    final_dec = decision.get("final_decision")
+    db_app.status = final_dec
     
     db.add(new_decision)
     await db.commit()
     
+    # Send email in background
+    if final_dec in ["approved", "rejected"]:
+        from ..tools.email import send_decision_email
+        background_tasks.add_task(
+            send_decision_email,
+            email=db_app.student_email,
+            application_id=id,
+            decision=final_dec,
+            score=new_decision.eligibility_score,
+            reasoning=new_decision.reasoning_text
+        )
+
     return {"status": "success", "message": "Decision recorded"}
 @router.post("/applications/{id}/reanalyze")
 async def reanalyze_application(id: uuid.UUID, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
