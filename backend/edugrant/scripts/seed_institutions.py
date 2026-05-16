@@ -46,10 +46,9 @@ async def seed_institutions():
         }
 
         institutes = [
-            Institution(id="stanford", name="Stanford University", admin_password="stanford_admin_123", rubric=stanford_rubric),
+            Institution(id="stanford", name="Stanford University", admin_password="13092025", rubric=stanford_rubric),
             Institution(id="harvard", name="Harvard University", admin_password="harvard_admin_456", rubric=harvard_rubric),
             Institution(id="mit", name="Massachusetts Institute of Technology", admin_password="mit_admin_789", rubric=mit_rubric),
-            Institution(id="edugrant", name="EduGrant Global", admin_password="13092025", rubric=stanford_rubric),
         ]
         
         # Use merge to update existing ones if needed

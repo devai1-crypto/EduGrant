@@ -154,6 +154,16 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
                 "recommendation": latest_decision.final_decision
             }
 
+    return {
+        "application": db_app,
+        "attachments": attachments,
+        "extracted_data": extracted_data,
+        "eligibility_result": eligibility_result,
+        "latest_decision": latest_decision,
+        "audit_trail": events,
+        "current_state": state.values if state else None
+    }
+
 @router.post("/settings/rubric")
 async def update_rubric(rubric: dict, db: AsyncSession = Depends(get_db), institute_id: str = Depends(verify_admin_token)):
     result = await db.execute(select(Institution).where(Institution.id == institute_id))
@@ -174,18 +184,22 @@ async def get_rubric(db: AsyncSession = Depends(get_db), institute_id: str = Dep
     return inst.rubric
 
 @router.post("/applications/{id}/override")
-async def override_decision(id: uuid.UUID, payload: dict, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
+async def override_decision(id: uuid.UUID, payload: dict, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db), institute_id: str = Depends(verify_admin_token)):
     try:
         decision = payload.get("decision")
         reason = payload.get("reason", "Manual override")
         
         print(f"DEBUG: Overriding {id} to {decision} with reason: {reason}")
 
-        # Fetch application to get student email
-        res = await db.execute(select(Application).where(Application.application_id == id))
+        # Fetch application and verify ownership
+        res = await db.execute(
+            select(Application)
+            .where(Application.application_id == id)
+            .where(Application.target_institution == institute_id)
+        )
         db_app = res.scalar_one_or_none()
         if not db_app:
-            raise HTTPException(status_code=404, detail="Application not found")
+            raise HTTPException(status_code=403, detail="Access denied for this application")
 
         await db.execute(
             update(Application)
@@ -240,13 +254,18 @@ async def record_manual_decision(
     id: uuid.UUID,
     decision: dict, # { "final_decision": "approved", "reasoning_text": "..." }
     background_tasks: BackgroundTasks,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    institute_id: str = Depends(verify_admin_token)
 ):
-    # Verify application exists
-    result = await db.execute(select(Application).where(Application.application_id == id))
+    # Verify ownership
+    result = await db.execute(
+        select(Application)
+        .where(Application.application_id == id)
+        .where(Application.target_institution == institute_id)
+    )
     db_app = result.scalar_one_or_none()
     if not db_app:
-        raise HTTPException(status_code=404, detail="Application not found")
+        raise HTTPException(status_code=403, detail="Access denied for this application")
         
     # Get latest run_id if exists
     run_result = await db.execute(
@@ -300,12 +319,16 @@ async def record_manual_decision(
 
     return {"status": "success", "message": "Decision recorded"}
 @router.post("/applications/{id}/reanalyze")
-async def reanalyze_application(id: uuid.UUID, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):
-    # Verify application exists
-    result = await db.execute(select(Application).where(Application.application_id == id))
+async def reanalyze_application(id: uuid.UUID, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db), institute_id: str = Depends(verify_admin_token)):
+    # Verify ownership
+    result = await db.execute(
+        select(Application)
+        .where(Application.application_id == id)
+        .where(Application.target_institution == institute_id)
+    )
     db_app = result.scalar_one_or_none()
     if not db_app:
-        raise HTTPException(status_code=404, detail="Application not found")
+        raise HTTPException(status_code=403, detail="Access denied for this application")
         
     # Reset application status
     db_app.status = "processing"
@@ -328,12 +351,16 @@ async def reanalyze_application(id: uuid.UUID, background_tasks: BackgroundTasks
     return {"status": "reanalysis_started", "run_id": str(run_id)}
 
 @router.delete("/applications/{id}")
-async def delete_application(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
-    # Verify application exists
-    result = await db.execute(select(Application).where(Application.application_id == id))
+async def delete_application(id: uuid.UUID, db: AsyncSession = Depends(get_db), institute_id: str = Depends(verify_admin_token)):
+    # Verify ownership
+    result = await db.execute(
+        select(Application)
+        .where(Application.application_id == id)
+        .where(Application.target_institution == institute_id)
+    )
     db_app = result.scalar_one_or_none()
     if not db_app:
-        raise HTTPException(status_code=404, detail="Application not found")
+        raise HTTPException(status_code=403, detail="Access denied for this application")
     
     # Get all attachments to delete from S3
     att_result = await db.execute(select(Attachment).where(Attachment.application_id == id))
