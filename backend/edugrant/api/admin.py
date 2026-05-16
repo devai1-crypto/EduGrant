@@ -129,11 +129,32 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
     extracted_data = state.values.get("extracted_data") if state else None
     eligibility_result = state.values.get("eligibility_result") if state else None
     
+    # Fallback: Get latest decision if state is missing eligibility data
+    # (Happens during re-analysis when state is reset)
+    latest_decision = None
+    if not eligibility_result or not extracted_data:
+        dec_result = await db.execute(
+            select(Decision)
+            .where(Decision.application_id == id)
+            .order_by(Decision.decided_at.desc())
+            .limit(1)
+        )
+        latest_decision = dec_result.scalar_one_or_none()
+        
+        if latest_decision and not eligibility_result:
+            # Reconstruct a basic result object for the UI
+            eligibility_result = {
+                "eligibility_score": latest_decision.eligibility_score,
+                "reasoning_chain": latest_decision.reasoning_text,
+                "recommendation": latest_decision.final_decision
+            }
+
     return {
         "application": db_app,
         "attachments": attachments,
         "extracted_data": extracted_data,
         "eligibility_result": eligibility_result,
+        "latest_decision": latest_decision,
         "audit_trail": events,
         "current_state": state.values if state else None
     }
