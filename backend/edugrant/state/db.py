@@ -21,8 +21,9 @@ class Application(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     attachments: Mapped[List["Attachment"]] = relationship(back_populates="application", cascade="all, delete-orphan")
-    runs: Mapped[List["AgentRun"]] = relationship(back_populates="application")
-    decisions: Mapped[List["Decision"]] = relationship(back_populates="application")
+    runs: Mapped[List["AgentRun"]] = relationship(back_populates="application", cascade="all, delete-orphan")
+    decisions: Mapped[List["Decision"]] = relationship(back_populates="application", cascade="all, delete-orphan")
+
 
 class Attachment(Base):
     __tablename__ = "attachments"
@@ -49,7 +50,8 @@ class AgentRun(Base):
     total_cost_usd: Mapped[float] = mapped_column(Float, default=0.0)
     
     application: Mapped["Application"] = relationship(back_populates="runs")
-    events: Mapped[List["AgentEvent"]] = relationship(back_populates="run")
+    events: Mapped[List["AgentEvent"]] = relationship(back_populates="run", cascade="all, delete-orphan")
+
 
 class AgentEvent(Base):
     __tablename__ = "agent_events"

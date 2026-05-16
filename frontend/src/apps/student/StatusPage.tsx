@@ -99,22 +99,23 @@ export const StatusPage = () => {
           {!isLoading && !error && (
             <>
           <div className="mt-16 flex items-center justify-between max-w-2xl mx-auto relative px-4">
-             <div className="absolute top-1/2 left-0 w-full h-[1px] bg-white/10 -translate-y-1/2" />
-             <div className="absolute top-1/2 left-0 h-[1px] bg-[#0066FF] -translate-y-1/2 transition-all duration-1000" style={{ width: `${((progress - 1) / 3) * 100}%` }} />
+             <div className="absolute top-[20px] left-0 w-full h-[1px] bg-white/10" />
+             <div className="absolute top-[20px] left-0 h-[1px] bg-[#0066FF] transition-all duration-1000 shadow-[0_0_10px_#0066FF]" style={{ width: `${((progress - 1) / 3) * 100}%` }} />
              {[
-               { id: 1, label: 'Received' },
-               { id: 2, label: 'Reviewing' },
-               { id: 3, label: 'Action Needed' },
-               { id: 4, label: 'Decided' }
+               { id: 1, label: 'RECEIVED' },
+               { id: 2, label: 'REVIEWING' },
+               { id: 3, label: 'ACTION NEEDED' },
+               { id: 4, label: 'DECIDED' }
              ].map((s) => (
                <div key={s.id} className="relative z-10 flex flex-col items-center gap-4">
-                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-700 ${progress >= s.id ? 'bg-[#0066FF] border-[#0066FF] text-white' : 'bg-[#001F3F] border-white/20 text-white/20'}`}>
+                  <div className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all duration-700 ${progress >= s.id ? 'bg-[#0066FF] border-[#0066FF] text-white shadow-[0_0_15px_rgba(0,102,255,0.5)]' : 'bg-[#001F3F] border-white/20 text-white/20'}`}>
                     {progress > s.id ? <CheckCircle2 className="w-5 h-5" /> : s.id}
                   </div>
                   <span className={`text-[9px] font-black uppercase tracking-[0.2em] ${progress >= s.id ? 'text-white' : 'text-white/20'}`}>{s.label}</span>
                </div>
              ))}
           </div>
+
 
           {progress === 3 && (
             <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="mt-16 max-w-xl mx-auto bg-white/5 backdrop-blur-2xl rounded-3xl border border-white/10 p-8 shadow-2xl text-left">
@@ -131,7 +132,7 @@ export const StatusPage = () => {
                 <div className="space-y-4 mb-8">
                     {status?.missing_fields.map((field, i) => (
                         <div key={i} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-                            <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{field}</span>
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/60">{field.replace(/_/g, ' ')}</span>
                             <span className="text-[9px] font-black uppercase tracking-widest text-[#0066FF]">Required</span>
                         </div>
                     ))}
@@ -154,7 +155,7 @@ export const StatusPage = () => {
              <div className="px-8 py-5 bg-white/5 rounded-[2rem] border border-white/10 backdrop-blur-xl relative group min-w-[320px]">
                 <span className="text-[8px] font-black uppercase tracking-[0.4em] text-white/20 block mb-3 text-center">Application Reference</span>
                 <div className="flex items-center justify-between gap-4">
-                  <code className="text-sm font-black text-[#0066FF] tracking-widest">{appId}</code>
+                  <code className="text-sm font-black text-[#0066FF] tracking-[0.3em]">{appId?.slice(0, 8).toUpperCase()}</code>
                   <button 
                     onClick={copyId}
                     className="p-2 hover:bg-white/10 rounded-lg transition-all text-white/40 hover:text-white"
@@ -171,12 +172,9 @@ export const StatusPage = () => {
 
              <div className="flex items-center justify-center gap-8">
                 <Link to="/" className="text-[10px] font-black text-gray-500 hover:text-white transition-colors uppercase tracking-[0.4em] cursor-pointer">Exit Session</Link>
-                <div className="w-1 h-1 bg-gray-800 rounded-full" />
-                <Link to={`/trace/${(runId && runId !== 'latest') ? runId : status?.run_id}`} className="text-[10px] font-black text-[#0066FF] hover:text-white transition-all uppercase tracking-[0.4em] flex items-center gap-2 group cursor-pointer">
-                  View Agent Trace <Activity className="w-4 h-4 group-hover:rotate-12 transition-all" />
-                </Link>
              </div>
           </div>
+
             </>
           )}
         </motion.div>

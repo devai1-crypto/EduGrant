@@ -102,7 +102,17 @@ export const api = {
     return response.json();
   },
 
+  deleteApplication: async (id: string) => {
+    const response = await fetch(`${API_BASE_URL}/admin/applications/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    if (!response.ok) throw new Error('Failed to delete application');
+    return response.json();
+  },
+
   // Agent Traces
+
   getRunEvents: async (runId: string) => {
     const response = await fetch(`${API_BASE_URL}/runs/${runId}/events`, {
       headers: getAuthHeaders()

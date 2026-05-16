@@ -9,9 +9,16 @@ from ..state.db import get_db, Application, Decision, AgentRun, AgentEvent, Atta
 from ..state.schemas import AdminApplicationSummary
 from ..orchestrator.checkpointer import graph
 from .deps import verify_admin_token
-from ..tools.s3 import get_presigned_url
+from ..tools.s3 import get_presigned_url, get_s3_client
+from ..config import settings
+from sqlalchemy import delete
 
 router = APIRouter(prefix="/api/admin", tags=["admin"], dependencies=[Depends(verify_admin_token)])
+
+def format_status(s: str) -> str:
+    if not s: return ""
+    return s.replace("_", " ").upper()
+
 
 @router.get("/queue", response_model=List[AdminApplicationSummary])
 async def get_admin_queue(db: AsyncSession = Depends(get_db)):
@@ -69,12 +76,13 @@ async def get_admin_queue(db: AsyncSession = Depends(get_db)):
             "application_id": str(app.application_id),
             "student_name": student_name,
             "gpa": gpa,
-            "status": app.status,
+            "status": format_status(app.status),
             "latest_run_id": str(latest_run.run_id) if latest_run else None,
             "eligibility_score": latest_dec.eligibility_score if latest_dec else None,
-            "recommendation": latest_dec.final_decision if latest_dec else None
+            "recommendation": format_status(latest_dec.final_decision) if latest_dec else None
         })
     return summaries
+
 
 @router.get("/applications/{id}")
 async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
@@ -227,3 +235,28 @@ async def reanalyze_application(id: uuid.UUID, background_tasks: BackgroundTasks
     background_tasks.add_task(run_orchestrator, str(id), str(run_id), resume=False)
     
     return {"status": "reanalysis_started", "run_id": str(run_id)}
+
+@router.delete("/applications/{id}")
+async def delete_application(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+    # Verify application exists
+    result = await db.execute(select(Application).where(Application.application_id == id))
+    db_app = result.scalar_one_or_none()
+    if not db_app:
+        raise HTTPException(status_code=404, detail="Application not found")
+    
+    # Get all attachments to delete from S3
+    att_result = await db.execute(select(Attachment).where(Attachment.application_id == id))
+    attachments = att_result.scalars().all()
+    
+    s3 = get_s3_client()
+    for att in attachments:
+        try:
+            s3.delete_object(Bucket=settings.R2_BUCKET, Key=att.s3_key)
+        except Exception as e:
+            print(f"Error deleting S3 object {att.s3_key}: {e}")
+
+    # Delete application (cascades will handle DB records)
+    await db.delete(db_app)
+    await db.commit()
+    
+    return {"status": "deleted", "id": str(id)}

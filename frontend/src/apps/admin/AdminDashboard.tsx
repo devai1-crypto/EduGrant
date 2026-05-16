@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Filter, Activity, ArrowUpRight, BarChart3, PieChart as PieChartIcon } from 'lucide-react';
+import { Filter, Activity, ArrowUpRight, BarChart3, PieChart as PieChartIcon, Trash2 } from 'lucide-react';
+
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis } from 'recharts';
 import { PageWrapper } from '../../components/PageWrapper';
 import { api } from '../../lib/api';
@@ -30,6 +31,18 @@ export const AdminDashboard = () => {
   ];
 
   const COLORS = ['#0066FF', '#FF4D4D', '#D4A373'];
+
+  const handleDelete = async (id: string) => {
+    if (!window.confirm('Are you sure you want to delete this application and all related data? This cannot be undone.')) return;
+    try {
+      await api.deleteApplication(id);
+      setApplications(prev => prev.filter(a => a.application_id !== id));
+    } catch (error) {
+      console.error('Failed to delete application:', error);
+      alert('Delete failed.');
+    }
+  };
+
 
   return (
     <PageWrapper>
@@ -123,11 +136,12 @@ export const AdminDashboard = () => {
                                         </div>
                                     </td>
                                     <td className="px-8 py-6 text-sm font-medium text-gray-600">
-                                        {app.extracted_data?.academic?.gpa || 'N/A'}
+                                        {app.gpa || '0.00'}
                                     </td>
                                     <td className="px-8 py-6 text-[#0066FF] font-black text-sm">
-                                        {app.eligibility_score || '--'}
+                                        {app.eligibility_score !== null && app.eligibility_score !== undefined ? app.eligibility_score : '--'}
                                     </td>
+
                                     <td className="px-8 py-6">
                                         <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest ${
                                             app.status === 'approved' ? 'bg-green-50 text-green-600' : 
@@ -138,6 +152,13 @@ export const AdminDashboard = () => {
                                         </span>
                                     </td>
                                     <td className="px-8 py-6 flex gap-2">
+                                        <button 
+                                            onClick={() => handleDelete(app.application_id)}
+                                            className="p-2.5 bg-red-50 rounded-lg text-red-500 hover:bg-red-500 hover:text-white transition-all cursor-pointer inline-flex"
+                                            title="Delete Application"
+                                        >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                        </button>
                                         <Link 
                                             to={`/trace/${app.latest_run_id || 'null'}`} 
                                             className="p-2.5 bg-gray-50 rounded-lg text-[#001F3F] hover:bg-[#001F3F] hover:text-white transition-all cursor-pointer inline-flex"
@@ -145,6 +166,7 @@ export const AdminDashboard = () => {
                                         >
                                             <Activity className="w-3.5 h-3.5" />
                                         </Link>
+
                                         <Link 
                                             to={`/admin/applications/${app.application_id}`} 
                                             className="p-2.5 bg-gray-50 rounded-lg text-[#001F3F] hover:bg-[#0066FF] hover:text-white transition-all cursor-pointer inline-flex"

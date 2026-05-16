@@ -7,7 +7,8 @@ from typing import List
 from ..state.db import get_db, Application, Attachment, AgentRun, AgentEvent, async_session
 from ..state.schemas import ApplicationPayload, ApplicationResponse, ApplicationStatusResponse
 from ..orchestrator.checkpointer import graph
-from ..tools.email import send_outreach_email
+from ..tools.email import send_outreach_email, send_application_confirmation
+
 
 router = APIRouter(prefix="/api/applications", tags=["applications"])
 
@@ -102,7 +103,8 @@ async def submit_application(payload: ApplicationPayload, background_tasks: Back
     await db.commit()
     
     background_tasks.add_task(run_orchestrator, str(app_id), str(run_id))
-    background_tasks.add_task(send_confirmation_email, student_email, str(app_id))
+    background_tasks.add_task(send_application_confirmation, student_email, str(app_id))
+
     
     return {"application_id": str(app_id), "run_id": str(run_id)}
 

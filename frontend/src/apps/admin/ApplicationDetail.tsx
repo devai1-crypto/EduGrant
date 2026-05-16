@@ -13,6 +13,21 @@ export const ApplicationDetail = () => {
   const [reason, setReason] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showTrace, setShowTrace] = useState(false);
+  const [isReanalyzing, setIsReanalyzing] = useState(false);
+
+  const handleReanalyze = async () => {
+    if (!id) return;
+    setIsReanalyzing(true);
+    try {
+      await api.reanalyzeApplication(id);
+      const data = await api.getApplicationDetail(id);
+      setApp(data);
+    } catch (error) {
+      alert('Re-analysis failed');
+    } finally {
+      setIsReanalyzing(false);
+    }
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -236,21 +251,29 @@ export const ApplicationDetail = () => {
           </header>
 
           {/* Visual Agent Graph */}
-          <div className="mb-12 bg-[#001F3F] rounded-[2.5rem] p-12 shadow-2xl relative overflow-hidden">
+          <div className="mb-12 bg-[#001F3F] rounded-[2.5rem] p-12 shadow-2xl relative overflow-hidden group">
              <div className="absolute top-0 right-0 w-64 h-64 bg-[#0066FF]/10 rounded-bl-full blur-3xl" />
+             
+             {/* Continuous Background Line - Aligned to center of 80px icons */}
+             <div className="absolute top-[88px] left-[15%] right-[15%] h-[1px] bg-white/10" />
+
+
              <div className="relative flex items-center justify-between max-w-4xl mx-auto">
+
                 {nodes.map((node, i) => {
                     const status = getNodeStatus(node.id);
                     return (
-                        <div key={node.id} className="relative flex flex-col items-center gap-4">
+                        <div key={node.id} className="relative z-10 flex flex-col items-center gap-4">
                             {i < nodes.length - 1 && (
-                                <div className="absolute left-[100%] top-1/2 w-full h-[1px] bg-white/10 -translate-y-1/2">
+                                <div className="absolute left-[50%] top-[40px] w-[200%] h-[1px] -z-10">
                                     <div 
-                                        className="h-full bg-[#0066FF] transition-all duration-1000"
+                                        className="h-full bg-[#0066FF] transition-all duration-1000 shadow-[0_0_10px_#0066FF]"
                                         style={{ width: status === 'OK' ? '100%' : '0%' }}
                                     />
                                 </div>
                             )}
+
+
                             <div className={`w-20 h-20 rounded-[1.5rem] border-2 flex items-center justify-center transition-all duration-700 ${status === 'OK' ? 'border-green-500 bg-green-500/10 text-green-500' : status === 'ACTIVE' ? 'border-[#0066FF] bg-[#0066FF]/20 text-[#0066FF] animate-pulse shadow-[0_0_30px_rgba(0,102,255,0.3)]' : 'border-white/5 bg-white/5 text-white/20'}`}>
                                 {status === 'OK' ? <ShieldCheck className="w-8 h-8" /> : status === 'ACTIVE' ? <Zap className="w-8 h-8" /> : <Clock className="w-8 h-8" />}
                             </div>
@@ -363,24 +386,18 @@ export const ApplicationDetail = () => {
                         <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">AI Decision Logic</h3>
                         <div className="flex gap-2">
                             <button 
-                                onClick={async () => {
-                                    if (!id) return;
-                                    try {
-                                        await api.reanalyzeApplication(id);
-                                        // Refresh data
-                                        const data = await api.getApplicationDetail(id);
-                                        setApp(data);
-                                    } catch (e) { alert('Re-analysis failed'); }
-                                }}
-                                className="text-[8px] font-black uppercase tracking-widest bg-white/10 px-3 py-1.5 rounded-full hover:bg-green-500 transition-all">
-                                Re-Analyze
+                                onClick={handleReanalyze}
+                                disabled={isReanalyzing}
+                                className="text-[8px] font-black uppercase tracking-widest bg-white/10 px-4 py-2 rounded-full hover:bg-[#0066FF] hover:scale-105 active:scale-95 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+                                {isReanalyzing ? 'Processing...' : 'Re-Analyze'}
                             </button>
                             <button 
                                 onClick={() => setShowTrace(true)}
-                                className="text-[8px] font-black uppercase tracking-widest bg-white/10 px-3 py-1.5 rounded-full hover:bg-[#0066FF] transition-all">
+                                className="text-[8px] font-black uppercase tracking-widest bg-white/10 px-4 py-2 rounded-full hover:bg-[#0066FF] hover:scale-105 active:scale-95 transition-all cursor-pointer">
                                 View Full Trace
                             </button>
                         </div>
+
                     </div>
                     <div className="flex items-baseline gap-2 mb-8">
                         <span className="text-6xl font-serif text-[#0066FF]">
@@ -394,9 +411,9 @@ export const ApplicationDetail = () => {
                     <div className="space-y-6">
                         <div>
                             <span className="block text-[8px] font-black uppercase text-white/40 mb-2">Recommendation</span>
-                            <span className="inline-block px-4 py-1.5 bg-[#0066FF] rounded-full text-[9px] font-black uppercase tracking-widest">
-                                {app.eligibility_result?.recommendation || 'Pending'}
-                            </span>
+                                <div className="px-10 py-3 bg-[#0066FF] text-white rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl text-center">
+                                    {(app.eligibility_result?.recommendation || 'PENDING').replace(/_/g, ' ')}
+                                </div>
                         </div>
                         <div>
                             <span className="block text-[8px] font-black uppercase text-white/40 mb-2">Reasoning Chain</span>

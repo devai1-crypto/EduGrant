@@ -56,14 +56,36 @@ export const StudentPortal = () => {
     }
   };
 
+  const validateStep = () => {
+    if (step === 1) {
+      return formData.fullName && formData.email && formData.dob && formData.nationality;
+    }
+    if (step === 2) {
+      return formData.institution && formData.gpa && formData.credits;
+    }
+    if (step === 3) {
+      return formData.income;
+    }
+    if (step === 4) {
+      // Transcript and ID Proof are mandatory
+      return files.transcript && files.id;
+    }
+    return true;
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validateStep()) {
+      alert('Please fill in all required fields and upload mandatory documents before proceeding.');
+      return;
+    }
     if (step < 5) {
       setStep(step + 1);
     } else {
       handleFinalSubmit();
     }
   };
+
 
   return (
     <PageWrapper>
@@ -197,10 +219,11 @@ export const StudentPortal = () => {
                     <div className="space-y-6">
                        <div className="p-10 border-2 border-dashed border-gray-100 rounded-[2rem] bg-[#FAFAFA] text-center group hover:border-[#001F3F] transition-all cursor-pointer relative">
                         <Upload className="w-10 h-10 text-gray-300 mb-4 mx-auto group-hover:text-[#001F3F] transition-colors" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#001F3F] block">Click to upload official transcript</span>
-                        <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileChange('transcript', e.target.files?.[0] || null)} />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-gray-400 group-hover:text-[#001F3F] block">Click to upload official transcript <span className="text-red-500">*</span></span>
+                        <input type="file" required className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileChange('transcript', e.target.files?.[0] || null)} />
                         {files.transcript && <div className="mt-4 text-green-500 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"><CheckCircle2 className="w-4 h-4" /> {files.transcript.name}</div>}
                       </div>
+
 
                       <div className="grid grid-cols-1 gap-4">
                          {[
@@ -215,8 +238,9 @@ export const StudentPortal = () => {
                                  <doc.icon className="w-5 h-5" />
                                </div>
                                <div>
-                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-[#001F3F]">{doc.label}</h4>
+                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-[#001F3F]">{doc.label} {(doc.id === 'id') && <span className="text-red-500">*</span>}</h4>
                                </div>
+
                              </div>
                              <input type="file" className="absolute inset-0 opacity-0 cursor-pointer" onChange={e => handleFileChange(doc.id, e.target.files?.[0] || null)} />
                              {files[doc.id] && <CheckCircle2 className="text-green-500 w-4 h-4" />}
@@ -293,11 +317,12 @@ export const StudentPortal = () => {
                     <button 
                       key="next-button"
                       type="button" 
-                      onClick={() => setStep(step + 1)} 
-                      className="px-10 py-3 bg-[#D4A373] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-[#D4A373]/20 cursor-pointer flex items-center gap-3"
+                      onClick={handleSubmit} 
+                      className={`px-10 py-3 bg-[#D4A373] text-white rounded-xl text-[10px] font-black uppercase tracking-widest hover:opacity-90 transition-all shadow-lg shadow-[#D4A373]/20 cursor-pointer flex items-center gap-3 ${!validateStep() ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                     >
                       {step === 4 ? 'Review Application' : 'Next Section'} <ArrowRight className="w-3.5 h-3.5" />
                     </button>
+
                    ) : (
                     <button 
                       key="submit-button"
