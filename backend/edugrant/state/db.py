@@ -9,11 +9,21 @@ from ..config import settings
 class Base(AsyncAttrs, DeclarativeBase):
     pass
 
+class Institution(Base):
+    __tablename__ = "institutions"
+    id: Mapped[str] = mapped_column(String(100), primary_key=True)
+    name: Mapped[str] = mapped_column(String(255))
+    admin_password: Mapped[str] = mapped_column(String(255))
+    rubric: Mapped[Optional[dict]] = mapped_column(JSON)
+    
+    applications: Mapped[List["Application"]] = relationship(back_populates="institution")
+
 class Application(Base):
     __tablename__ = "applications"
     
     application_id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
     scholarship_type: Mapped[str] = mapped_column(String(50))
+    target_institution: Mapped[Optional[str]] = mapped_column(String(100), ForeignKey("institutions.id"))
     student_email: Mapped[str] = mapped_column(String(255))
     raw_payload: Mapped[dict] = mapped_column(JSON)
     status: Mapped[str] = mapped_column(String(50), default="received")
@@ -23,6 +33,7 @@ class Application(Base):
     attachments: Mapped[List["Attachment"]] = relationship(back_populates="application", cascade="all, delete-orphan")
     runs: Mapped[List["AgentRun"]] = relationship(back_populates="application", cascade="all, delete-orphan")
     decisions: Mapped[List["Decision"]] = relationship(back_populates="application", cascade="all, delete-orphan")
+    institution: Mapped[Optional["Institution"]] = relationship(back_populates="applications")
 
 
 class Attachment(Base):

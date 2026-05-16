@@ -23,12 +23,26 @@ async def run(state: EduGrantState):
     """
     Applies the scholarship rubric to extracted data and produces a score.
     """
+    from ..state.db import async_session, Application, Institution
+    from sqlalchemy import select
+
+    # Load custom rubric from DB based on target_institution
+    app_id = state.get("application_id")
+    rubric = None
+    async with async_session() as db:
+        res = await db.execute(
+            select(Institution.rubric)
+            .join(Application)
+            .where(Application.application_id == app_id)
+        )
+        rubric = res.scalar_one_or_none()
+
     if not settings.OPENAI_API_KEY:
         return {
             "eligibility_result": EligibilityResult(
                 eligibility_score=85,
                 recommendation="auto_approve",
-                reasoning_chain="Mock eligibility: Good GPA and complete data.",
+                reasoning_chain=f"Mock eligibility using {rubric.get('name') if rubric else 'default'} rubric.",
                 confidence=0.9
             )
         }
@@ -39,10 +53,6 @@ async def run(state: EduGrantState):
         api_key=settings.OPENAI_API_KEY
     ).with_structured_output(EligibilityResult)
     
-    # Load rubric based on scholarship type
-    scholarship_type = state.get("scholarship_type", "merit_undergrad")
-    rubric = load_rubric(scholarship_type)
-    
     prompt = ChatPromptTemplate.from_messages([
         ("system", "You are the Eligibility Scoring Agent for EduGrant AI. Evaluate the student's extracted data against the provided institutional rubric. "
                    "Provide a score from 0-100 and a recommendation (auto_approve, auto_reject, human_review). "
@@ -50,9 +60,6 @@ async def run(state: EduGrantState):
                    "CRITICAL: Check 'attachment_qualities' in the data. If documents are invalid, random, or missing, "
                    "you MUST penalize that category score (usually to 0) or apply a significant 'Trust Penalty' to the final sum. "
                    "The 'eligibility_score' MUST be the EXACT mathematical result of your reasoning chain calculation. No mismatches."),
-
-
-
         ("user", "Extracted Data: {data}\n\nInstitutional Rubric:\n{rubric}")
     ])
     

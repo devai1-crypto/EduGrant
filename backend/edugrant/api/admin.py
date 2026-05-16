@@ -21,8 +21,12 @@ def format_status(s: str) -> str:
 
 
 @router.get("/queue", response_model=List[AdminApplicationSummary])
-async def get_admin_queue(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(Application).order_by(Application.created_at.desc()))
+async def get_admin_queue(db: AsyncSession = Depends(get_db), institute_id: str = Depends(verify_admin_token)):
+    result = await db.execute(
+        select(Application)
+        .where(Application.target_institution == institute_id)
+        .order_by(Application.created_at.desc())
+    )
     apps = result.scalars().all()
     
     summaries = []
@@ -85,7 +89,7 @@ async def get_admin_queue(db: AsyncSession = Depends(get_db)):
 
 
 @router.get("/applications/{id}")
-async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_db)):
+async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_db), institute_id: str = Depends(verify_admin_token)):
     # Force UUID type check
     if not isinstance(id, uuid.UUID):
         try:
@@ -93,14 +97,15 @@ async def get_application_detail(id: uuid.UUID, db: AsyncSession = Depends(get_d
         except:
             raise HTTPException(status_code=400, detail="Invalid UUID format")
 
-    result = await db.execute(select(Application).where(Application.application_id == id))
+    result = await db.execute(
+        select(Application)
+        .where(Application.application_id == id)
+        .where(Application.target_institution == institute_id)
+    )
     db_app = result.scalar_one_or_none()
     
     if not db_app:
-        # Debugging: check if any app exists
-        all_apps = await db.execute(select(Application.application_id))
-        print(f"DEBUG: Looking for {id}. Available IDs: {[str(a) for a in all_apps.scalars().all()]}")
-        raise HTTPException(status_code=404, detail=f"Application {id} not found in database")
+        raise HTTPException(status_code=403, detail="Application not found or access denied for this institution")
         
     # Get all events for audit trail
     events_result = await db.execute(

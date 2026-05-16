@@ -1,10 +1,12 @@
-from fastapi import Header, HTTPException, status
-from ..config import settings
+from fastapi import Header, HTTPException, status, Depends
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from ..state.db import get_db, Institution
 
-async def verify_admin_token(authorization: str = Header(None)):
+async def verify_admin_token(authorization: str = Header(None), db: AsyncSession = Depends(get_db)):
     """
-    Simple dependency to verify the admin password in the Authorization header.
-    Expected format: Bearer <password>
+    Verifies the admin password for a specific institution.
+    Expected format: Bearer <institute_id>:<password>
     """
     if not authorization:
         raise HTTPException(
@@ -13,22 +15,35 @@ async def verify_admin_token(authorization: str = Header(None)):
         )
     
     try:
-        scheme, token = authorization.split()
+        scheme, credentials = authorization.split()
         if scheme.lower() != "bearer":
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid authentication scheme"
             )
         
-        if token != settings.ADMIN_PASSWORD:
+        if ":" not in credentials:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid admin password"
+                detail="Invalid credentials format. Expected institute_id:password"
             )
+            
+        institute_id, password = credentials.split(":", 1)
+        
+        # Verify in database
+        result = await db.execute(select(Institution).where(Institution.id == institute_id))
+        institution = result.scalar_one_or_none()
+        
+        if not institution or institution.admin_password != password:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid institution or password"
+            )
+            
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid authorization header format"
         )
     
-    return token
+    return institute_id

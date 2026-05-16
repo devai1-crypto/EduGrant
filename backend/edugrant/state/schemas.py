@@ -51,6 +51,7 @@ class OutreachDraft(BaseModel):
 
 class ApplicationPayload(BaseModel):
     scholarship_type: str
+    target_institution: str # e.g. "stanford"
     form_data: dict
     attachments: List[str]  # List of S3 keys
 

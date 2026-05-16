@@ -76,6 +76,7 @@ async def submit_application(payload: ApplicationPayload, background_tasks: Back
     db_app = Application(
         application_id=app_id,
         scholarship_type=payload.scholarship_type,
+        target_institution=payload.target_institution,
         student_email=student_email,
         raw_payload=payload.form_data,
         status="received"

@@ -8,6 +8,7 @@ interface AdminLoginProps {
 }
 
 export const AdminLogin = ({ onLogin }: AdminLoginProps) => {
+  const [instituteId, setInstituteId] = useState('stanford');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -16,16 +17,19 @@ export const AdminLogin = ({ onLogin }: AdminLoginProps) => {
     e.preventDefault();
     setLoading(true);
     
-    // Simulate a bit of lag for "premium" feel
-    setTimeout(() => {
-      if (password === '13092025') {
-        onLogin(password);
-      } else {
-        setError(true);
-        setLoading(false);
-        // Shake animation reset
-        setTimeout(() => setError(false), 500);
-      }
+    // Send the combined credentials
+    const credentials = `${instituteId}:${password}`;
+    
+    setTimeout(async () => {
+        try {
+            await onLogin(credentials);
+        } catch (err) {
+            setError(true);
+            // Shake animation reset
+            setTimeout(() => setError(false), 500);
+        } finally {
+            setLoading(false);
+        }
     }, 800);
   };
 
@@ -50,18 +54,34 @@ export const AdminLogin = ({ onLogin }: AdminLoginProps) => {
             className="bg-white/5 backdrop-blur-3xl rounded-[3rem] border border-white/10 p-10 shadow-2xl"
           >
             <form onSubmit={handleSubmit} className="space-y-8">
-              <div>
-                <label className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-3 block">Security Credentials</label>
-                <div className="relative">
-                  <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
-                  <input 
-                    type="password" 
-                    required
-                    placeholder="Enter Access Key"
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-white text-sm focus:border-[#0066FF] outline-none transition-all placeholder:text-white/10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
+              <div className="space-y-6">
+                <div>
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-3 block">Target Institution</label>
+                  <select 
+                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-sm focus:border-[#0066FF] outline-none transition-all"
+                    value={instituteId}
+                    onChange={(e) => setInstituteId(e.target.value)}
+                  >
+                    <option value="stanford">Stanford University</option>
+                    <option value="harvard">Harvard University</option>
+                    <option value="mit">MIT</option>
+                    <option value="edugrant">EduGrant Global</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-3 block">Security Credentials</label>
+                  <div className="relative">
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
+                    <input 
+                      type="password" 
+                      required
+                      placeholder="Enter Access Key"
+                      className="w-full bg-white/5 border border-white/10 rounded-2xl pl-14 pr-6 py-4 text-white text-sm focus:border-[#0066FF] outline-none transition-all placeholder:text-white/10"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 

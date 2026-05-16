@@ -15,7 +15,8 @@ export const StudentPortal = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     fullName: '', email: '', dob: '', nationality: 'United States',
-    studentId: '', institution: '', gpa: '', credits: '', income: ''
+    studentId: '', institution: '', gpa: '', credits: '', income: '',
+    targetInstitution: 'stanford', targetCourse: '', targetYear: '2026'
   });
   
   const [files, setFiles] = useState<{ [key: string]: File | null }>({
@@ -41,6 +42,7 @@ export const StudentPortal = () => {
 
       const response = await api.submitApplication({
         scholarship_type: 'merit_undergrad',
+        target_institution: formData.targetInstitution,
         form_data: formData,
         attachments: attachments
       });
@@ -58,7 +60,7 @@ export const StudentPortal = () => {
 
   const validateStep = () => {
     if (step === 1) {
-      return formData.fullName && formData.email && formData.dob && formData.nationality && formData.studentId;
+      return formData.fullName && formData.email && formData.dob && formData.nationality && formData.studentId && formData.targetInstitution && formData.targetCourse && formData.targetYear;
     }
     if (step === 2) {
       return formData.institution && formData.gpa && formData.credits;
@@ -145,6 +147,28 @@ export const StudentPortal = () => {
                         <div>
                           <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Student ID <span className="text-red-500">*</span></label>
                           <input type="text" required className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-[#001F3F] outline-none" placeholder="SID-88291" value={formData.studentId} onChange={e => setFormData({...formData, studentId: e.target.value})} />
+                        </div>
+                        <div className="col-span-2 grid grid-cols-3 gap-8 p-8 bg-[#F8F9FA] rounded-[2rem] border border-gray-100">
+                            <div className="col-span-3 mb-2">
+                                <h4 className="text-[10px] font-black uppercase tracking-[0.3em] text-[#0066FF]">Scholarship Destination</h4>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Target Institution <span className="text-red-500">*</span></label>
+                                <select className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-[#001F3F] outline-none" value={formData.targetInstitution} onChange={e => setFormData({...formData, targetInstitution: e.target.value})}>
+                                    <option value="stanford">Stanford University</option>
+                                    <option value="harvard">Harvard University</option>
+                                    <option value="mit">MIT</option>
+                                    <option value="edugrant">EduGrant Global</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Target Course <span className="text-red-500">*</span></label>
+                                <input type="text" required className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-[#001F3F] outline-none" placeholder="Computer Science" value={formData.targetCourse} onChange={e => setFormData({...formData, targetCourse: e.target.value})} />
+                            </div>
+                            <div>
+                                <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Target Year <span className="text-red-500">*</span></label>
+                                <input type="text" required className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-[#001F3F] outline-none" placeholder="2026" value={formData.targetYear} onChange={e => setFormData({...formData, targetYear: e.target.value})} />
+                            </div>
                         </div>
                       </div>
                     </div>
