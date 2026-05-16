@@ -58,14 +58,14 @@ export const AdminLogin = ({ onLogin }: AdminLoginProps) => {
                 <div>
                   <label className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 mb-3 block">Target Institution</label>
                   <select 
-                    className="w-full bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white text-sm focus:border-[#0066FF] outline-none transition-all"
+                    className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-[#001F3F] outline-none"
                     value={instituteId}
                     onChange={(e) => setInstituteId(e.target.value)}
                   >
-                    <option value="stanford">Stanford University</option>
-                    <option value="harvard">Harvard University</option>
-                    <option value="mit">MIT</option>
-                    <option value="edugrant">EduGrant Global</option>
+                    <option value="stanford" className="text-black">Stanford University</option>
+                    <option value="harvard" className="text-black">Harvard University</option>
+                    <option value="mit" className="text-black">MIT</option>
+                    <option value="edugrant" className="text-black">EduGrant Global</option>
                   </select>
                 </div>
 
