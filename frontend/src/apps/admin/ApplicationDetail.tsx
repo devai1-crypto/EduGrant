@@ -98,36 +98,99 @@ export const ApplicationDetail = () => {
       {/* Decision Modal */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-          <div className="absolute inset-0 bg-[#001F3F]/60 backdrop-blur-md" onClick={() => setShowModal(false)} />
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg relative z-10 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] overflow-hidden border border-gray-200">
-            <div className={`p-8 ${decisionType === 'approved' ? 'bg-green-500' : 'bg-red-500'} border-b border-white/10`}>
-                <h3 className="text-serif text-2xl text-white mb-1">
-                    {decisionType === 'approved' ? 'Approve Application' : 'Reject Application'}
-                </h3>
-                <p className="text-[10px] font-black uppercase tracking-widest text-white/70">
-                    Provide a reason for this manual override
-                </p>
-            </div>
-            <div className="p-8">
-                <textarea 
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="Enter your detailed reasoning here..."
-                    className="w-full h-48 bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 text-sm text-[#001F3F] placeholder:text-gray-400 focus:outline-none focus:border-[#0066FF] focus:bg-white transition-all resize-none mb-8 shadow-inner"
-                />
-                <div className="flex gap-4">
-                    <button 
-                        onClick={() => setShowModal(false)}
-                        className="flex-1 py-4 bg-gray-50 text-gray-400 rounded-2xl text-[10px] font-black uppercase tracking-widest hover:bg-gray-100 transition-all">
-                        Cancel
-                    </button>
-                    <button 
-                        onClick={handleSubmitDecision}
-                        disabled={!reason.trim() || submitting}
-                        className={`flex-1 py-4 ${decisionType === 'approved' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'} text-white rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-xl disabled:opacity-50 disabled:cursor-not-allowed`}>
-                        {submitting ? 'Processing...' : `Confirm ${decisionType}`}
-                    </button>
+          {/* Backdrop */}
+          <div 
+            className="absolute inset-0 bg-[#001F3F]/80 backdrop-blur-2xl" 
+            onClick={() => setShowModal(false)} 
+          />
+          
+          {/* Modal Card */}
+          <div className="relative z-10 w-full max-w-lg">
+            {/* Ambient glow behind card */}
+            <div className={`absolute -inset-8 rounded-[3rem] blur-3xl opacity-20 transition-all duration-700 ${
+              decisionType === 'approved' 
+                ? 'bg-emerald-500' 
+                : 'bg-rose-600'
+            }`} />
+
+            <div className="relative bg-[#020D1A] rounded-[2rem] overflow-hidden border border-white/10 shadow-[0_40px_80px_-12px_rgba(0,0,0,0.6)]">
+              
+              {/* Header */}
+              <div className="relative p-8 border-b border-white/5 overflow-hidden">
+                {/* Subtle corner gradient accent */}
+                <div className={`absolute top-0 right-0 w-40 h-40 rounded-bl-full blur-2xl opacity-20 ${
+                  decisionType === 'approved' ? 'bg-emerald-400' : 'bg-rose-500'
+                }`} />
+                <div className="absolute top-0 left-0 w-24 h-24 rounded-br-full blur-2xl opacity-10 bg-[#0066FF]" />
+
+                {/* Icon pill */}
+                <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full mb-5 border text-[9px] font-black uppercase tracking-[0.2em] ${
+                  decisionType === 'approved' 
+                    ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                    : 'bg-rose-500/10 border-rose-500/30 text-rose-400'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${decisionType === 'approved' ? 'bg-emerald-400' : 'bg-rose-400'} animate-pulse`} />
+                  Manual Override
                 </div>
+
+                <h3 className="text-serif text-3xl text-white mb-1.5 font-bold">
+                  {decisionType === 'approved' ? 'Approve Application' : 'Reject Application'}
+                </h3>
+                <p className="text-[10px] font-black uppercase tracking-[0.25em] text-white/30">
+                  Provide a reason for this human veto
+                </p>
+              </div>
+
+              {/* Body */}
+              <div className="p-8">
+                <label className="block text-[9px] font-black uppercase tracking-[0.2em] text-white/30 mb-3">
+                  Reasoning Statement
+                </label>
+                <textarea 
+                  value={reason}
+                  onChange={(e) => setReason(e.target.value)}
+                  placeholder="Enter your detailed reasoning here..."
+                  className={`w-full h-40 bg-white/[0.04] border rounded-2xl p-5 text-sm text-white/80 placeholder:text-white/20 focus:outline-none transition-all duration-300 resize-none font-mono text-[12px] leading-relaxed ${
+                    decisionType === 'approved'
+                      ? 'border-white/10 focus:border-emerald-500/50 focus:bg-emerald-500/[0.03]'
+                      : 'border-white/10 focus:border-rose-500/50 focus:bg-rose-500/[0.03]'
+                  }`}
+                />
+
+                {/* Character hint */}
+                <p className="text-[9px] text-white/20 font-mono mt-2 mb-8">
+                  {reason.trim().length === 0 ? 'Reason is required to proceed' : `${reason.trim().length} characters`}
+                </p>
+
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setShowModal(false)}
+                    className="flex-1 py-4 bg-white/5 border border-white/10 text-white/40 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-white/10 hover:text-white/70 transition-all">
+                    Cancel
+                  </button>
+                  <button 
+                    onClick={handleSubmitDecision}
+                    disabled={!reason.trim() || submitting}
+                    className={`flex-1 py-4 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300 disabled:opacity-30 disabled:cursor-not-allowed shadow-2xl relative overflow-hidden group ${
+                      decisionType === 'approved'
+                        ? 'bg-emerald-500 hover:bg-emerald-400 text-white shadow-emerald-500/30'
+                        : 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30'
+                    }`}>
+                    <span className="relative z-10">
+                      {submitting ? 'Processing...' : `Confirm ${decisionType === 'approved' ? 'Approved' : 'Rejected'}`}
+                    </span>
+                    {/* Shimmer effect on hover */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Footer accent line */}
+              <div className={`h-[2px] w-full ${
+                decisionType === 'approved' 
+                  ? 'bg-gradient-to-r from-transparent via-emerald-500 to-transparent' 
+                  : 'bg-gradient-to-r from-transparent via-rose-500 to-transparent'
+              }`} />
             </div>
           </div>
         </div>
