@@ -1,0 +1,31 @@
+prompts:
+  - "You are the Triage Agent for EduGrant AI. Your job is to classify inbound scholarship applications. Classify by scholarship type, completeness, and priority. For MVP, only 'merit_undergrad' is supported. Check if all required fields are present in the payload and if attachments exist. Application Payload: {{payload}}\nAttachments: {{attachments}}"
+
+providers:
+  - id: openai:gpt-4o-mini
+    config:
+      temperature: 0
+
+tests:
+  - vars:
+      payload: '{"fullName": "John Doe", "email": "john@example.edu", "gpa": 3.8}'
+      attachments: '[{"filename": "transcript.pdf"}]'
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).routing_decision === "proceed"'
+      - type: javascript
+        value: 'JSON.parse(output).scholarship_type === "merit_undergrad"'
+
+  - vars:
+      payload: '{"email": "missing@example.edu"}'
+      attachments: '[]'
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).routing_decision === "request_missing_info"'
+
+  - vars:
+      payload: '{"fullName": "Spam", "email": "spam@spam.com"}'
+      attachments: '[]'
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).routing_decision === "reject_invalid"'

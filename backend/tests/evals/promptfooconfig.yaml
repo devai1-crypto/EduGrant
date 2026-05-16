@@ -1,0 +1,13 @@
+description: 'EduGrant AI Agent Evaluations'
+
+prompts:
+  - triage_eval.yaml
+  - eligibility_eval.yaml
+
+providers:
+  - id: openai:gpt-4o-mini
+  - id: openai:gpt-4o
+
+tests:
+  - triage_eval.yaml
+  - eligibility_eval.yaml

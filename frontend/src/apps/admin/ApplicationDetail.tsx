@@ -99,12 +99,12 @@ export const ApplicationDetail = () => {
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-[#001F3F]/60 backdrop-blur-md" onClick={() => setShowModal(false)} />
-          <div className="bg-white rounded-[2.5rem] w-full max-w-lg relative z-10 shadow-2xl overflow-hidden border border-white/20">
-            <div className={`p-8 ${decisionType === 'approved' ? 'bg-green-50' : 'bg-red-50'} border-b border-gray-100`}>
-                <h3 className="text-serif text-2xl text-[#001F3F] mb-1">
+          <div className="bg-white rounded-[2.5rem] w-full max-w-lg relative z-10 shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] overflow-hidden border border-gray-200">
+            <div className={`p-8 ${decisionType === 'approved' ? 'bg-green-500' : 'bg-red-500'} border-b border-white/10`}>
+                <h3 className="text-serif text-2xl text-white mb-1">
                     {decisionType === 'approved' ? 'Approve Application' : 'Reject Application'}
                 </h3>
-                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">
+                <p className="text-[10px] font-black uppercase tracking-widest text-white/70">
                     Provide a reason for this manual override
                 </p>
             </div>
@@ -113,7 +113,7 @@ export const ApplicationDetail = () => {
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
                     placeholder="Enter your detailed reasoning here..."
-                    className="w-full h-40 bg-gray-50 border border-gray-100 rounded-2xl p-6 text-sm text-[#001F3F] placeholder:text-gray-300 focus:outline-none focus:border-[#0066FF] transition-all resize-none mb-8"
+                    className="w-full h-48 bg-gray-50 border-2 border-gray-200 rounded-2xl p-6 text-sm text-[#001F3F] placeholder:text-gray-400 focus:outline-none focus:border-[#0066FF] focus:bg-white transition-all resize-none mb-8 shadow-inner"
                 />
                 <div className="flex gap-4">
                     <button 

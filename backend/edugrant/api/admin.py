@@ -159,13 +159,25 @@ async def override_decision(id: uuid.UUID, payload: dict, background_tasks: Back
         )
         
         # Log the override decision
-        score = 100 if decision == 'approved' else 0
+        # Try to keep the existing AI score if available
+        existing_score = 0
+        if db_app:
+            # Look for latest agent decision to get the AI score
+            agent_dec = await db.execute(
+                select(Decision.eligibility_score)
+                .where(Decision.application_id == id)
+                .where(Decision.decided_by == 'agent')
+                .order_by(Decision.decided_at.desc())
+                .limit(1)
+            )
+            existing_score = agent_dec.scalar_one_or_none() or 0
+
         db_decision = Decision(
             application_id=id,
             final_decision=decision,
             reasoning_text=reason,
             decided_by="admin",
-            eligibility_score=score
+            eligibility_score=existing_score
         )
         db.add(db_decision)
         await db.commit()
@@ -178,7 +190,7 @@ async def override_decision(id: uuid.UUID, payload: dict, background_tasks: Back
                 email=db_app.student_email,
                 application_id=id,
                 decision=decision,
-                score=score,
+                score=existing_score,
                 reasoning=reason
             )
 
@@ -210,13 +222,24 @@ async def record_manual_decision(
     )
     run_id = run_result.scalar_one_or_none()
     
+    # Try to keep the existing AI score if available
+    existing_score = 0
+    agent_dec = await db.execute(
+        select(Decision.eligibility_score)
+        .where(Decision.application_id == id)
+        .where(Decision.decided_by == 'agent')
+        .order_by(Decision.decided_at.desc())
+        .limit(1)
+    )
+    existing_score = agent_dec.scalar_one_or_none() or 0
+
     # Create manual decision record
     new_decision = Decision(
         application_id=id,
         run_id=run_id,
         final_decision=decision.get("final_decision"),
         reasoning_text=decision.get("reasoning_text"),
-        eligibility_score=100 if decision.get("final_decision") == "approved" else 0,
+        eligibility_score=existing_score,
         decided_by="admin_manual",
         decided_at=datetime.utcnow()
     )

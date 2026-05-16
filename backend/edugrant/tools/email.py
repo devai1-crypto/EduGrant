@@ -108,6 +108,8 @@ async def send_decision_email(email: str, application_id: str, decision: str, sc
     async with httpx.AsyncClient() as client:
         try:
             response = await client.post(url, headers=headers, json=payload)
+            if response.status_code >= 300:
+                print(f"Brevo Error ({response.status_code}): {response.text}")
             return response.status_code < 300
         except Exception as e:
             print(f"Decision email error: {e}")

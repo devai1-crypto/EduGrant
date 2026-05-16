@@ -1,0 +1,26 @@
+prompts:
+  - "Apply the following scholarship rubric to the extracted application data. Rubric: {{rubric}}\nExtracted Data: {{data}}\nProvide a score from 0-100 and a recommendation."
+
+providers:
+  - id: openai:gpt-4o
+    config:
+      temperature: 0
+
+tests:
+  - vars:
+      rubric: '{"min_gpa": 3.5, "weight_gpa": 0.6, "weight_income": 0.4}'
+      data: '{"student_info": {"full_name": "Alice"}, "transcript_info": {"gpa": 3.9}, "income_proof": {"annual_income": 50000}}'
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).eligibility_score > 90'
+      - type: javascript
+        value: 'JSON.parse(output).recommendation === "auto_approve"'
+
+  - vars:
+      rubric: '{"min_gpa": 3.5, "weight_gpa": 0.6, "weight_income": 0.4}'
+      data: '{"student_info": {"full_name": "Bob"}, "transcript_info": {"gpa": 2.5}, "income_proof": {"annual_income": 100000}}'
+    assert:
+      - type: javascript
+        value: 'JSON.parse(output).eligibility_score < 60'
+      - type: javascript
+        value: 'JSON.parse(output).recommendation === "auto_reject"'
