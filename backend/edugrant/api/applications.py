@@ -66,7 +66,7 @@ async def send_confirmation_email(email: str, application_id: str):
     <br/>
     <p>Best regards,<br/>EduGrant Admissions Team</p>
     """
-    send_outreach_email(email, subject, body)
+    await send_outreach_email(email, subject, body)
 
 @router.post("", response_model=ApplicationResponse)
 async def submit_application(payload: ApplicationPayload, background_tasks: BackgroundTasks, db: AsyncSession = Depends(get_db)):

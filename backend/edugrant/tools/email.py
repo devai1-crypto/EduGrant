@@ -54,3 +54,43 @@ async def send_application_confirmation(email: str, application_id: str):
         except Exception as e:
             print(f"Email error: {e}")
             return False
+
+async def send_outreach_email(email: str, subject: str, body: str):
+    """
+    Sends a generic outreach email using Brevo API.
+    """
+    if not settings.BREVO_API_KEY or settings.BREVO_API_KEY.startswith("xkeysib-..."):
+        print(f"Skipping outreach email to {email} - Brevo API key not configured.")
+        return False
+
+    url = "https://api.brevo.com/v3/smtp/email"
+    headers = {
+        "accept": "application/json",
+        "api-key": settings.BREVO_API_KEY,
+        "content-type": "application/json"
+    }
+
+    payload = {
+        "sender": {"name": "EduGrant AI", "email": "admissions@edugrant.ai"},
+        "to": [{"email": email}],
+        "subject": subject,
+        "htmlContent": f"""
+            <html>
+                <body style="font-family: sans-serif; line-height: 1.6; color: #001F3F;">
+                    <div style="max-width: 600px; margin: 0 auto; padding: 40px; border: 1px solid #f0f0f0; rounded: 20px;">
+                        {body}
+                        <hr style="border: none; border-top: 1px solid #f0f0f0; margin: 30px 0;" />
+                        <p style="font-size: 11px; color: #999;">This is an automated message from the EduGrant AI Admissions System.</p>
+                    </div>
+                </body>
+            </html>
+        """
+    }
+
+    async with httpx.AsyncClient() as client:
+        try:
+            response = await client.post(url, headers=headers, json=payload)
+            return response.status_code < 300
+        except Exception as e:
+            print(f"Outreach email error: {e}")
+            return False
