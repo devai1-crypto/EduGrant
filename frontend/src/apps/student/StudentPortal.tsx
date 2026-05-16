@@ -58,7 +58,7 @@ export const StudentPortal = () => {
 
   const validateStep = () => {
     if (step === 1) {
-      return formData.fullName && formData.email && formData.dob && formData.nationality;
+      return formData.fullName && formData.email && formData.dob && formData.nationality && formData.studentId;
     }
     if (step === 2) {
       return formData.institution && formData.gpa && formData.credits;
@@ -67,8 +67,8 @@ export const StudentPortal = () => {
       return formData.income;
     }
     if (step === 4) {
-      // Transcript and ID Proof are mandatory
-      return files.transcript && files.id;
+      // Every single document is now mandatory as per user request
+      return files.transcript && files.id && files.income && files.recommendation && files.essay;
     }
     return true;
   };
@@ -143,8 +143,8 @@ export const StudentPortal = () => {
                           <input type="text" required className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-[#001F3F] outline-none" placeholder="United States" value={formData.nationality} onChange={e => setFormData({...formData, nationality: e.target.value})} />
                         </div>
                         <div>
-                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Student ID (Optional)</label>
-                          <input type="text" className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-[#001F3F] outline-none" placeholder="SID-88291" value={formData.studentId} onChange={e => setFormData({...formData, studentId: e.target.value})} />
+                          <label className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400 mb-2.5 block">Student ID <span className="text-red-500">*</span></label>
+                          <input type="text" required className="w-full bg-white border border-gray-200 rounded-xl px-5 py-3.5 text-sm font-medium focus:border-[#001F3F] outline-none" placeholder="SID-88291" value={formData.studentId} onChange={e => setFormData({...formData, studentId: e.target.value})} />
                         </div>
                       </div>
                     </div>
@@ -238,7 +238,7 @@ export const StudentPortal = () => {
                                  <doc.icon className="w-5 h-5" />
                                </div>
                                <div>
-                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-[#001F3F]">{doc.label} {(doc.id === 'id') && <span className="text-red-500">*</span>}</h4>
+                                 <h4 className="text-[10px] font-black uppercase tracking-widest text-[#001F3F]">{doc.label} <span className="text-red-500">*</span></h4>
                                </div>
 
                              </div>
